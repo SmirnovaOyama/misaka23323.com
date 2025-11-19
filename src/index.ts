@@ -74,6 +74,13 @@ export default {
             gap: 2rem;
             list-style: none;
             align-items: center;
+            height: 100%;
+        }
+
+        .nav-item {
+            height: 100%;
+            display: flex;
+            align-items: center;
         }
 
         .nav-item a {
