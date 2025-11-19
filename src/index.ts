@@ -45,6 +45,7 @@ const navBar = `
 <div class="progress-container">
     <div class="progress-bar" id="progressBar"></div>
 </div>
+<div class="overlay"></div>
 <nav class="navbar">
     <a href="/" class="logo">Mahiro Oyama</a>
     <div class="menu-toggle">☰</div>
@@ -69,9 +70,22 @@ const scripts = `
     // Mobile Menu Toggle
     const menuToggle = document.querySelector('.menu-toggle');
     const navLinks = document.querySelector('.nav-links');
+    const overlay = document.querySelector('.overlay');
     
-    menuToggle.addEventListener('click', () => {
+    function toggleMenu() {
         navLinks.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    // Close menu when clicking a link
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+             if (navLinks.classList.contains('active')) toggleMenu();
+        });
     });
 
     // Mobile Dropdown Toggle
@@ -79,6 +93,7 @@ const scripts = `
     dropdowns.forEach(dropdown => {
         dropdown.addEventListener('click', (e) => {
             if (window.innerWidth <= 768) {
+                e.stopPropagation(); // Prevent bubbling to navLinks click
                 dropdown.classList.toggle('active');
             }
         });
