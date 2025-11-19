@@ -1,6 +1,21 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
+// .wrangler/tmp/bundle-sOJ9Yx/strip-cf-connecting-ip-header.js
+function stripCfConnectingIPHeader(input, init) {
+  const request = new Request(input, init);
+  request.headers.delete("CF-Connecting-IP");
+  return request;
+}
+__name(stripCfConnectingIPHeader, "stripCfConnectingIPHeader");
+globalThis.fetch = new Proxy(globalThis.fetch, {
+  apply(target, thisArg, argArray) {
+    return Reflect.apply(target, thisArg, [
+      stripCfConnectingIPHeader.apply(null, argArray)
+    ]);
+  }
+});
+
 // src/index.ts
 var src_default = {
   async fetch(request, env, ctx) {
@@ -10,13 +25,16 @@ var src_default = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misaka23323</title>
+    <title>Mahiro Oyama</title>
     <style>
         :root {
             --bg-color: #ffffff;
             --text-color: #333333;
             --accent-color: #007aff;
+            --secondary-text: #666666;
             --nav-height: 60px;
+            --card-bg: #f8f9fa;
+            --card-hover: #f0f0f0;
         }
 
         * {
@@ -124,38 +142,92 @@ var src_default = {
 
         /* Main Content */
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: calc(var(--nav-height) + 4rem) 2rem 4rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
         }
 
         .hero {
-            text-align: center;
-            margin-bottom: 4rem;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+            gap: 4rem;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 500px;
         }
 
         .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
             font-weight: 800;
+            line-height: 1.2;
         }
 
         .hero p {
             font-size: 1.2rem;
-            color: #666;
-            max-width: 600px;
-            margin: 0 auto;
+            color: var(--secondary-text);
+            margin-bottom: 2rem;
         }
 
-        .section {
-            margin-bottom: 3rem;
+        .hero-links {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 400px;
         }
 
-        .section h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eaeaea;
+        .link-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .link-card:hover {
+            background: var(--card-hover);
+            transform: translateY(-2px);
+            border-color: #eaeaea;
+        }
+
+        .link-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .link-card p {
+            font-size: 0.95rem;
+            color: var(--secondary-text);
+            margin-bottom: 0;
+        }
+
+        .sub-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--secondary-text);
+            border: 1px solid #eaeaea;
         }
 
         /* Responsive */
@@ -195,43 +267,66 @@ var src_default = {
             .dropdown.active .dropdown-menu {
                 display: block;
             }
+
+            .container {
+                padding-top: calc(var(--nav-height) + 2rem);
+                align-items: flex-start;
+            }
+
+            .hero {
+                flex-direction: column;
+                gap: 3rem;
+            }
+
+            .hero-content, .hero-links {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <a href="#" class="logo">Misaka23323</a>
+        <a href="#" class="logo">Mahiro Oyama</a>
         <div class="menu-toggle">\u2630</div>
         <ul class="nav-links">
             <li class="nav-item"><a href="#">Home</a></li>
-            <li class="nav-item"><a href="#about">About</a></li>
+            <li class="nav-item"><a href="#articles">Articles</a></li>
             <li class="nav-item dropdown">
                 <a href="#">Projects \u25BE</a>
                 <ul class="dropdown-menu">
-                    <li class="dropdown-item"><a href="#">Web Dev</a></li>
-                    <li class="dropdown-item"><a href="#">Mobile Apps</a></li>
-                    <li class="dropdown-item"><a href="#">Open Source</a></li>
+                    <li class="dropdown-item"><a href="#web-dev">Web Dev</a></li>
+                    <li class="dropdown-item"><a href="#mobile-apps">Mobile Apps</a></li>
+                    <li class="dropdown-item"><a href="#open-source">Open Source</a></li>
                 </ul>
             </li>
-            <li class="nav-item"><a href="#contact">Contact</a></li>
+            <li class="nav-item"><a href="#about">About</a></li>
         </ul>
     </nav>
 
     <main class="container">
-        <section class="hero">
-            <h1>Hello, I'm Misaka</h1>
-            <p>A passionate developer building things for the web.</p>
-        </section>
-
-        <section id="about" class="section">
-            <h2>About Me</h2>
-            <p>I am a software engineer with a love for clean code and minimalist design. I specialize in TypeScript, React, and Cloudflare Workers.</p>
-        </section>
-
-        <section id="projects" class="section">
-            <h2>Recent Work</h2>
-            <p>Check out my projects in the dropdown menu above to see what I've been working on lately.</p>
-        </section>
+        <div class="hero">
+            <div class="hero-content">
+                <h1>Hello, I'm<br>Mahiro Oyama</h1>
+                <p>A passionate developer building things for the web. I specialize in TypeScript, React, and Cloudflare Workers.</p>
+            </div>
+            
+            <div class="hero-links">
+                <a href="#articles" class="link-card">
+                    <h3>Articles <span>\u2192</span></h3>
+                    <p>Read my latest thoughts on technology and development.</p>
+                </a>
+                
+                <div class="link-card">
+                    <h3>Projects</h3>
+                    <p>Check out what I've been working on.</p>
+                    <div class="sub-links">
+                        <span class="tag">Web Dev</span>
+                        <span class="tag">Mobile Apps</span>
+                        <span class="tag">Open Source</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -248,7 +343,6 @@ var src_default = {
         dropdowns.forEach(dropdown => {
             dropdown.addEventListener('click', (e) => {
                 if (window.innerWidth <= 768) {
-                    // e.preventDefault(); // Optional: prevent link navigation if clicking the parent
                     dropdown.classList.toggle('active');
                 }
             });
@@ -265,7 +359,7 @@ var src_default = {
   }
 };
 
-// ../../../../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
+// node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
   try {
     return await middlewareCtx.next(request, env);
@@ -283,7 +377,7 @@ var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "drainBody");
 var middleware_ensure_req_body_drained_default = drainBody;
 
-// ../../../../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts
+// node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts
 function reduceError(e) {
   return {
     name: e?.name,
@@ -306,14 +400,14 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-ARV6zO/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-sOJ9Yx/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
 ];
 var middleware_insertion_facade_default = src_default;
 
-// ../../../../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/common.ts
+// node_modules/wrangler/templates/middleware/common.ts
 var __facade_middleware__ = [];
 function __facade_register__(...args) {
   __facade_middleware__.push(...args.flat());
@@ -338,24 +432,22 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-ARV6zO/middleware-loader.entry.ts
-var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
+// .wrangler/tmp/bundle-sOJ9Yx/middleware-loader.entry.ts
+var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
     this.cron = cron;
     this.#noRetry = noRetry;
   }
-  static {
-    __name(this, "__Facade_ScheduledController__");
-  }
   #noRetry;
   noRetry() {
-    if (!(this instanceof ___Facade_ScheduledController__)) {
+    if (!(this instanceof __Facade_ScheduledController__)) {
       throw new TypeError("Illegal invocation");
     }
     this.#noRetry();
   }
 };
+__name(__Facade_ScheduledController__, "__Facade_ScheduledController__");
 function wrapExportedHandler(worker) {
   if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
     return worker;
@@ -396,15 +488,15 @@ function wrapWorkerEntrypoint(klass) {
     __facade_register__(middleware);
   }
   return class extends klass {
-    #fetchDispatcher = /* @__PURE__ */ __name((request, env, ctx) => {
+    #fetchDispatcher = (request, env, ctx) => {
       this.env = env;
       this.ctx = ctx;
       if (super.fetch === void 0) {
         throw new Error("Entrypoint class does not define a fetch() function.");
       }
       return super.fetch(request);
-    }, "#fetchDispatcher");
-    #dispatcher = /* @__PURE__ */ __name((type, init) => {
+    };
+    #dispatcher = (type, init) => {
       if (type === "scheduled" && super.scheduled !== void 0) {
         const controller = new __Facade_ScheduledController__(
           Date.now(),
@@ -414,7 +506,7 @@ function wrapWorkerEntrypoint(klass) {
         );
         return super.scheduled(controller);
       }
-    }, "#dispatcher");
+    };
     fetch(request) {
       return __facade_invoke__(
         request,
