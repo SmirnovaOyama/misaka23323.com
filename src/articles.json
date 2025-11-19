@@ -10,5 +10,11 @@
     "slug": "test",
     "date": "2025-11-19",
     "file": "./articles/test.md"
+  },
+  {
+    "title": "Thirty Steps",
+    "slug": "thirty-steps",
+    "date": "2025-11-19",
+    "file": "./articles/20251119150556-thirty-steps.md"
   }
 ]
