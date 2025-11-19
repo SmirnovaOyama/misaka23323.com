@@ -1,0 +1,13 @@
+{
+  "name": "misaka23323-com",
+  "version": "1.0.0",
+  "description": "Personal website",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "typescript": "^5.4.5",
+    "wrangler": "^3.57.2"
+  }
+}
