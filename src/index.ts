@@ -249,7 +249,7 @@ function renderPublishPage() {
     <h1>Publish New Article</h1>
     <form id="publishForm">
         <div class="form-group">
-            <label for="token">GitHub Token (repo scope)</label>
+            <label for="token">GitHub Token</label>
             <input type="password" id="token" name="token" required placeholder="ghp_...">
         </div>
         <div class="form-group">
