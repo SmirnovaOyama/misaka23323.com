@@ -275,18 +275,30 @@ async function renderArticlesPage(url?: URL) {
 
     const articlesHtml = filtered.map(article => `
         <div class="article-item">
-            <h2><a href="/articles/${article.slug}">${article.title}</a></h2>
-            <p>${article.date}${(article as any).collection ? ` • <a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a>` : ''}</p>
+            <h2>
+                <a href="/articles/${article.slug}">${article.title}</a>
+                ${(article as any).collection ? ` <span class="article-tag"><a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a></span>` : ''}
+            </h2>
+            <p>${article.date}</p>
         </div>
     `).join('');
 
-        // Render a custom dropdown and populate it on the client by fetching articles.json
+        // Render a custom dropdown server-side using available collections
+        const items = ['All', ...collections];
+        const toggleLabel = collectionFilter || 'All';
+        const itemsHtml = items.map(it => {
+            const value = it === 'All' ? '' : encodeURIComponent(it);
+            return `<li class="cd-item"><button type="button" data-value="${value}">${it}</button></li>`;
+        }).join('\n');
+
         const collectionsHtml = `
             <div class="collections">
                 <label><strong>Collections:</strong></label>
                 <div class="collection-dropdown" id="collectionDropdown">
-                    <button type="button" class="cd-toggle" id="cdToggle">All <span class="chev">▾</span></button>
-                    <ul class="cd-menu" id="cdMenu" aria-hidden="true"></ul>
+                    <button type="button" class="cd-toggle" id="cdToggle">${toggleLabel} <span class="chev">▾</span></button>
+                    <ul class="cd-menu" id="cdMenu" aria-hidden="true">
+                        ${itemsHtml}
+                    </ul>
                 </div>
             </div>
             <script>
@@ -294,55 +306,18 @@ async function renderArticlesPage(url?: URL) {
                     const toggle = document.getElementById('cdToggle');
                     const menu = document.getElementById('cdMenu');
                     if (!toggle || !menu) return;
-                    const params = new URL(location.href).searchParams;
-                    const current = params.get('collection') || '';
-
-                    function closeMenu() {
-                        menu.classList.remove('open');
-                        menu.setAttribute('aria-hidden', 'true');
-                    }
-
-                    function openMenu() {
-                        menu.classList.add('open');
-                        menu.setAttribute('aria-hidden', 'false');
-                    }
-
-                    toggle.addEventListener('click', function(e){
-                        e.stopPropagation();
-                        if (menu.classList.contains('open')) closeMenu(); else openMenu();
-                    });
-
-                    // click outside to close
+                    function closeMenu() { menu.classList.remove('open'); menu.setAttribute('aria-hidden','true'); toggle.querySelector('.chev').style.transform = ''; }
+                    function openMenu() { menu.classList.add('open'); menu.setAttribute('aria-hidden','false'); toggle.querySelector('.chev').style.transform = 'rotate(180deg)'; }
+                    toggle.addEventListener('click', function(e){ e.stopPropagation(); if (menu.classList.contains('open')) closeMenu(); else openMenu(); });
                     document.addEventListener('click', function(){ closeMenu(); });
                     menu.addEventListener('click', function(e){ e.stopPropagation(); });
-
-                    // fetch collections and populate
-                    fetch('${BASE_URL}/articles.json')
-                        .then(r => r.json())
-                        .then(list => {
-                            const cols = Array.from(new Set(list.map(a => a.collection).filter(Boolean)));
-                            // always include 'All' as first
-                            const items = ['All'].concat(cols);
-                            items.forEach(it => {
-                                const li = document.createElement('li');
-                                li.className = 'cd-item';
-                                const btn = document.createElement('button');
-                                btn.type = 'button';
-                                btn.textContent = it;
-                                btn.dataset.value = it === 'All' ? '' : encodeURIComponent(it);
-                                btn.addEventListener('click', function(){
-                                    const v = this.dataset.value || '';
-                                    if (!v) location.href = '/articles';
-                                    else location.href = '/articles?collection=' + v;
-                                });
-                                li.appendChild(btn);
-                                menu.appendChild(li);
-                                // set current label
-                                if ((it === 'All' && !current) || (it !== 'All' && (it === current || encodeURIComponent(it) === current))) {
-                                    toggle.childNodes[0].textContent = it + ' ';
-                                }
-                            });
-                        }).catch(() => {/* ignore errors */});
+                    // handle clicks on items
+                    Array.from(menu.querySelectorAll('button[data-value]')).forEach(btn => {
+                        btn.addEventListener('click', function(){
+                            const v = this.dataset.value || '';
+                            if (!v) location.href = '/articles'; else location.href = '/articles?collection=' + v;
+                        });
+                    });
                 })();
             <\/script>
         `;
@@ -379,8 +354,10 @@ function renderPublishPage() {
         </div>
         <div class="form-group">
             <label for="collection">Collection (optional)</label>
-            <input list="collectionsList" id="collection" name="collection" placeholder="Choose or type to add">
-            <datalist id="collectionsList"></datalist>
+            <div class="combobox-wrapper">
+                <input type="text" id="collection" name="collection" placeholder="Choose or type to add" autocomplete="off">
+                <ul id="collectionMenu" class="combobox-menu"></ul>
+            </div>
         </div>
         <div class="form-group">
             <label for="content">Content (Markdown)</label>
@@ -440,22 +417,50 @@ function renderPublishPage() {
     });
 </script>
 <script>
-                // Populate publish page collection datalist with existing collections
-                (function(){
-                        const datalist = document.getElementById('collectionsList');
-                        if (!datalist) return;
-                        fetch('${BASE_URL}/articles.json')
-                            .then(r => r.json())
-                            .then(list => {
-                                const cols = Array.from(new Set(list.map(a => a.collection).filter(Boolean)));
-                                cols.forEach(c => {
-                                    const opt = document.createElement('option');
-                                    opt.value = c;
-                                    datalist.appendChild(opt);
-                                });
-                            }).catch(() => {/* ignore errors */});
-                })();
-        </script>
+        // Custom combobox for collection
+        (function(){
+            const input = document.getElementById('collection');
+            const menu = document.getElementById('collectionMenu');
+            if (!input || !menu) return;
+
+            let collections = [];
+
+            function renderMenu(filterText = '') {
+                menu.innerHTML = '';
+                const filtered = collections.filter(c => c.toLowerCase().includes(filterText.toLowerCase()));
+                
+                if (filtered.length === 0) {
+                    menu.style.display = 'none';
+                    return;
+                }
+
+                filtered.forEach(c => {
+                    const li = document.createElement('li');
+                    li.textContent = c;
+                    li.addEventListener('mousedown', (e) => {
+                        e.preventDefault(); // prevent blur
+                        input.value = c;
+                        menu.style.display = 'none';
+                    });
+                    menu.appendChild(li);
+                });
+                menu.style.display = 'block';
+            }
+
+            input.addEventListener('focus', () => renderMenu(input.value));
+            input.addEventListener('input', () => renderMenu(input.value));
+            
+            input.addEventListener('blur', () => {
+                menu.style.display = 'none';
+            });
+
+            fetch('${BASE_URL}/articles.json')
+              .then(r => r.json())
+              .then(list => {
+                collections = Array.from(new Set(list.map(a => a.collection).filter(Boolean)));
+              }).catch(() => {/* ignore errors */});
+        })();
+    </script>
 `;
     return render("Publish Article", content);
 }
@@ -559,12 +564,12 @@ async function renderArticlePage(slug: string) {
     const markdown = await fetchArticleContent(article.file);
     const htmlContent = marked(markdown);
 
-    const collectionHtml = (article as any).collection ? ` • <a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a>` : '';
+    const collectionHtml = (article as any).collection ? ` <span class="article-tag"><a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a></span>` : '';
 
     const content = `
 <div class="article-content">
-    <h1>${article.title}</h1>
-    <p class="article-meta">${article.date}${collectionHtml}</p>
+    <h1>${article.title}${collectionHtml}</h1>
+    <p class="article-meta">${article.date}</p>
     <div class="content">
         ${htmlContent}
     </div>
