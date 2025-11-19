@@ -1,5 +1,11 @@
 import { marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
 import { articles, articleContents } from './generated-articles';
+import styles from './styles.css';
+
+marked.use(markedKatex({
+  throwOnError: false
+}));
 
 export interface Env {
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -15,216 +21,7 @@ export interface Env {
   // MY_SERVICE: Fetcher;
 }
 
-const commonCss = `
-:root {
-    --bg-color: #ffffff;
-    --text-color: #333333;
-    --accent-color: #007aff;
-    --secondary-text: #666666;
-    --nav-height: 60px;
-    --card-bg: #f8f9fa;
-    --card-hover: #f0f0f0;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    line-height: 1.6;
-}
-
-/* Navbar */
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--nav-height);
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid #eaeaea;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 2rem;
-    z-index: 1000;
-}
-
-.logo {
-    font-weight: 700;
-    font-size: 1.2rem;
-    text-decoration: none;
-    color: var(--text-color);
-}
-
-.nav-links {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-    align-items: center;
-    height: 100%;
-}
-
-.nav-item {
-    height: 100%;
-    display: flex;
-    align-items: center;
-}
-
-.nav-item a {
-    text-decoration: none;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    transition: color 0.2s;
-}
-
-.nav-item a:hover {
-    color: var(--accent-color);
-}
-
-        /* Dropdown */
-        .dropdown {
-            position: relative;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            border: 1px solid #eaeaea;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            min-width: 180px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.2s ease;
-            list-style: none;
-            padding: 0.5rem 0;
-            z-index: 1001;
-        }
-
-        .dropdown:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }.dropdown-item a {
-    display: block;
-    padding: 0.5rem 1.5rem;
-    color: var(--text-color);
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-
-.dropdown-item a:hover {
-    background-color: #f5f5f5;
-    color: var(--accent-color);
-}
-
-/* Mobile Menu */
-.menu-toggle {
-    display: none;
-    cursor: pointer;
-    font-size: 1.5rem;
-}
-
-/* Main Content */
-.container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: calc(var(--nav-height) + 4rem) 2rem 4rem;
-    min-height: 100vh;
-}
-
-.article-list, .article-content {
-    max-width: 800px;
-}
-
-.article-list h1, .article-content h1 {
-    font-size: 2.5rem;
-    margin-bottom: 2rem;
-}
-
-.article-item {
-    margin-bottom: 2rem;
-}
-
-.article-item h2 a {
-    text-decoration: none;
-    color: var(--text-color);
-}
-
-.article-item h2 a:hover {
-    color: var(--accent-color);
-}
-
-.article-item p {
-    color: var(--secondary-text);
-    font-size: 0.9rem;
-}
-
-.article-content .article-meta {
-    color: var(--secondary-text);
-    margin-bottom: 2rem;
-}
-
-.article-content .content {
-    line-height: 1.8;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-        position: absolute;
-        top: var(--nav-height);
-        left: 0;
-        right: 0;
-        background: white;
-        flex-direction: column;
-        padding: 1rem;
-        border-bottom: 1px solid #eaeaea;
-        gap: 1rem;
-    }
-
-    .nav-links.active {
-        display: flex;
-    }
-
-    .menu-toggle {
-        display: block;
-    }
-
-    .dropdown-menu {
-        position: static;
-        box-shadow: none;
-        border: none;
-        padding-left: 1rem;
-        display: none;
-        opacity: 1;
-        visibility: visible;
-        transform: none;
-    }
-    
-    .dropdown.active .dropdown-menu {
-        display: block;
-    }
-
-    .container {
-        padding-top: calc(var(--nav-height) + 2rem);
-    }
-}
-`;
+// CSS moved to styles.css
 
 const navBar = `
 <nav class="navbar">
@@ -276,7 +73,8 @@ function render(title: string, content: string) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
-    <style>${commonCss}</style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Cd3q6S5L036Vyu+86IPDgKS0Wl9UClhYJe19ehkw+53TRagLX" crossorigin="anonymous">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     ${navBar}
@@ -453,6 +251,12 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+
+    if (path === '/styles.css') {
+      return new Response(styles, {
+        headers: { 'Content-Type': 'text/css' },
+      });
+    }
 
     if (path === '/') {
         return new Response(renderHomePage(), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
