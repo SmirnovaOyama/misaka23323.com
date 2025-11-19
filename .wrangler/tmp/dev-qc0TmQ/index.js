@@ -16702,7 +16702,7 @@ function blockKatex(options2, renderer) {
 __name(blockKatex, "blockKatex");
 
 // src/index.ts
-import styles2 from "./8624dce8a5d6e54692cd3611ec0c0dd6d5c53fa3-styles.css";
+import styles2 from "./5959201ec5f3e0d1aebd12bfc8c3c426a04eee0f-styles.css";
 marked.use(src_default({
   throwOnError: false,
   nonStandard: true
@@ -16726,7 +16726,9 @@ async function fetchArticleContent(filename) {
   return await response.text();
 }
 __name(fetchArticleContent, "fetchArticleContent");
-var navBar = `
+function renderNavBar(isArticle = false, slug = "") {
+  const editLi = isArticle ? `<li class="nav-item nav-edit"><a href="/publish?edit=${encodeURIComponent(slug)}">Edit Article</a></li>` : "";
+  return `
 <div class="progress-container">
     <div class="progress-bar" id="progressBar"></div>
 </div>
@@ -16735,6 +16737,7 @@ var navBar = `
     <a href="/" class="logo">Mahiro Oyama</a>
     <div class="menu-toggle">\u2630</div>
     <ul class="nav-links">
+        ${editLi}
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
         <li class="nav-item dropdown">
@@ -16749,6 +16752,8 @@ var navBar = `
     </ul>
 </nav>
 `;
+}
+__name(renderNavBar, "renderNavBar");
 var scripts = `
 <script>
     // Mobile Menu Toggle
@@ -16800,7 +16805,8 @@ var scripts = `
     };
 <\/script>
 `;
-function render3(title, content) {
+function render3(title, content, navHtml) {
+  const nav = navHtml || renderNavBar();
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -16812,7 +16818,7 @@ function render3(title, content) {
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    ${navBar}
+    ${nav}
     <main class="container">
         ${content}
     </main>
@@ -17008,7 +17014,31 @@ async function renderArticlesPage(url) {
   return render3("Articles", content);
 }
 __name(renderArticlesPage, "renderArticlesPage");
-function renderPublishPage() {
+async function renderPublishPage(url) {
+  const editSlug = url?.searchParams.get("edit") || "";
+  let titleVal = "";
+  let slugVal = "";
+  let collectionVal = "";
+  let contentVal = "";
+  let originalFileVal = "";
+  let isEdit = false;
+  if (editSlug) {
+    const articles = await fetchArticlesList();
+    const article = articles.find((a) => a.slug === editSlug);
+    if (article) {
+      isEdit = true;
+      titleVal = article.title || "";
+      slugVal = article.slug || "";
+      collectionVal = article.collection || "";
+      originalFileVal = article.file || "";
+      try {
+        contentVal = await fetchArticleContent(article.file || "");
+      } catch (e) {
+        contentVal = "";
+      }
+    }
+  }
+  const esc = /* @__PURE__ */ __name((s) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"), "esc");
   const content = `
 <div class="publish-form">
     <h1>Publish New Article</h1>
@@ -17019,16 +17049,16 @@ function renderPublishPage() {
         </div>
         <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" id="title" name="title" required placeholder="My New Article">
+            <input type="text" id="title" name="title" required placeholder="My New Article" value="${esc(titleVal)}">
         </div>
         <div class="form-group">
             <label for="slug">Slug</label>
-            <input type="text" id="slug" name="slug" required placeholder="my-new-article">
+            <input type="text" id="slug" name="slug" required placeholder="my-new-article" value="${esc(slugVal)}">
         </div>
         <div class="form-group">
             <label for="collection">Collection (optional)</label>
             <div class="combobox-wrapper">
-                <input type="text" id="collection" name="collection" placeholder="Choose or type to add" autocomplete="off">
+                <input type="text" id="collection" name="collection" placeholder="Choose or type to add" autocomplete="off" value="${esc(collectionVal)}">
                 <ul id="collectionMenu" class="combobox-menu"></ul>
             </div>
         </div>
@@ -17036,9 +17066,11 @@ function renderPublishPage() {
             <label for="content">Content (Markdown)</label>
             <textarea id="content" name="content" required placeholder="# Hello World
 
-Write your content here..."></textarea>
+Write your content here...">${esc(contentVal)}</textarea>
         </div>
-        <button type="submit" class="btn-submit" id="submitBtn">Publish</button>
+        ${isEdit ? `<input type="hidden" name="originalFile" value="${esc(originalFileVal)}">` : ""}
+        ${isEdit ? `<input type="hidden" name="originalSlug" value="${esc(slugVal)}">` : ""}
+        <button type="submit" class="btn-submit" id="submitBtn">${isEdit ? "Update Article" : "Publish"}</button>
     </form>
 </div>
 
@@ -17063,7 +17095,7 @@ Write your content here..."></textarea>
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Publishing...';
+        submitBtn.textContent = '${isEdit ? "Updating..." : "Publishing..."}';
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
@@ -17087,7 +17119,7 @@ Write your content here..."></textarea>
         } catch (error) {
             alert('Error publishing article: ' + error.message);
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Publish';
+            submitBtn.textContent = '${isEdit ? "Update Article" : "Publish"}';
         }
     });
 <\/script>
@@ -17143,16 +17175,30 @@ __name(renderPublishPage, "renderPublishPage");
 async function handlePublish(request) {
   try {
     const { token, title, slug, content, collection } = await request.json();
+    const originalFile = (await request.json())?.originalFile;
     if (!token || !title || !slug || !content) {
       return new Response("Missing required fields", { status: 400 });
     }
     const owner = "Mahironya";
     const repo = "misaka23323.com";
     const date = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-    const now = /* @__PURE__ */ new Date();
-    const timestamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0") + String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0") + String(now.getSeconds()).padStart(2, "0");
-    const filename = `${timestamp}-${slug}.md`;
-    const filePath = `src/articles/${filename}`;
+    let filePath = "";
+    let currentFileSha = void 0;
+    const bodyJson = await request.json();
+    const providedOriginalFile = bodyJson.originalFile || "";
+    if (providedOriginalFile) {
+      filePath = providedOriginalFile.replace(/^\.\//, "");
+      try {
+        const meta = await githubFetch(filePath, { method: "GET" });
+        currentFileSha = meta.sha;
+      } catch (e) {
+      }
+    } else {
+      const now = /* @__PURE__ */ new Date();
+      const timestamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0") + String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0") + String(now.getSeconds()).padStart(2, "0");
+      const filename = `${timestamp}-${slug}.md`;
+      filePath = `src/articles/${filename}`;
+    }
     const githubFetch = /* @__PURE__ */ __name(async (path2, options2 = {}) => {
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path2}`;
       const res = await fetch(url, {
@@ -17169,27 +17215,39 @@ async function handlePublish(request) {
       }
       return res.json();
     }, "githubFetch");
+    const putBody = {
+      message: providedOriginalFile ? `Update article: ${title}` : `Add article: ${title}`,
+      content: btoa(unescape(encodeURIComponent(content)))
+      // Handle UTF-8
+    };
+    if (currentFileSha)
+      putBody.sha = currentFileSha;
     await githubFetch(filePath, {
       method: "PUT",
-      body: JSON.stringify({
-        message: `Add article: ${title}`,
-        content: btoa(unescape(encodeURIComponent(content)))
-        // Handle UTF-8
-      })
+      body: JSON.stringify(putBody)
     });
     const articlesJsonPath = "src/articles.json";
     const currentFile = await githubFetch(articlesJsonPath);
     const currentContent = JSON.parse(decodeURIComponent(escape(atob(currentFile.content))));
+    const fileRef = `./${filePath}`.replace(/^\.\//, "./");
     const newArticle = {
       title,
       slug,
       date,
-      file: `./articles/${filename}`
+      file: fileRef
     };
-    if (collection) {
+    if (collection)
       newArticle.collection = collection;
-    }
-    const newContent = [...currentContent, newArticle];
+    let updated = false;
+    const newContent = currentContent.map((entry) => {
+      if (entry.file === providedOriginalFile || entry.slug === bodyJson.originalSlug) {
+        updated = true;
+        return newArticle;
+      }
+      return entry;
+    });
+    if (!updated)
+      newContent.push(newArticle);
     await githubFetch(articlesJsonPath, {
       method: "PUT",
       body: JSON.stringify({
@@ -17222,7 +17280,8 @@ async function renderArticlePage(slug) {
     </div>
 </div>
 `;
-  return render3(article.title, content);
+  const navHtml = renderNavBar(true, slug);
+  return render3(article.title, content, navHtml);
 }
 __name(renderArticlePage, "renderArticlePage");
 var src_default2 = {
@@ -17242,7 +17301,8 @@ var src_default2 = {
       return new Response(html2, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
     }
     if (path2 === "/publish") {
-      return new Response(renderPublishPage(), { headers: { "Content-Type": "text/html;charset=UTF-8" } });
+      const html2 = await renderPublishPage(url);
+      return new Response(html2, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
     }
     if (path2 === "/api/publish" && request.method === "POST") {
       return handlePublish(request);

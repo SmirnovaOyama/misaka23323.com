@@ -42,7 +42,9 @@ export interface Env {
 
 // CSS moved to styles.css
 
-const navBar = `
+function renderNavBar(isArticle = false, slug = '') {
+    const editLi = isArticle ? `<li class="nav-item nav-edit"><a href="/publish?edit=${encodeURIComponent(slug)}">Edit Article</a></li>` : '';
+    return `
 <div class="progress-container">
     <div class="progress-bar" id="progressBar"></div>
 </div>
@@ -51,6 +53,7 @@ const navBar = `
     <a href="/" class="logo">Mahiro Oyama</a>
     <div class="menu-toggle">☰</div>
     <ul class="nav-links">
+        ${editLi}
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
         <li class="nav-item dropdown">
@@ -65,6 +68,7 @@ const navBar = `
     </ul>
 </nav>
 `;
+}
 
 const scripts = `
 <script>
@@ -118,7 +122,8 @@ const scripts = `
 </script>
 `;
 
-function render(title: string, content: string) {
+function render(title: string, content: string, navHtml?: string) {
+    const nav = navHtml || renderNavBar();
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -130,7 +135,7 @@ function render(title: string, content: string) {
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    ${navBar}
+    ${nav}
     <main class="container">
         ${content}
     </main>
@@ -335,7 +340,37 @@ async function renderArticlesPage(url?: URL) {
     return render("Articles", content);
 }
 
-function renderPublishPage() {
+async function renderPublishPage(url?: URL) {
+    // If edit query param is present, prefill form with existing article
+    const editSlug = url?.searchParams.get('edit') || '';
+    let titleVal = '';
+    let slugVal = '';
+    let collectionVal = '';
+    let contentVal = '';
+    let originalFileVal = '';
+    let isEdit = false;
+
+    if (editSlug) {
+        const articles = await fetchArticlesList();
+        const article = articles.find((a: any) => a.slug === editSlug);
+        if (article) {
+            isEdit = true;
+            titleVal = article.title || '';
+            slugVal = article.slug || '';
+            collectionVal = (article as any).collection || '';
+            originalFileVal = article.file || '';
+            // fetch markdown content
+            try {
+                contentVal = await fetchArticleContent(article.file || '');
+            } catch (e) {
+                contentVal = '';
+            }
+        }
+    }
+
+    // simple escaper for attribute values
+    const esc = (s: string) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
     const content = `
 <div class="publish-form">
     <h1>Publish New Article</h1>
@@ -346,24 +381,26 @@ function renderPublishPage() {
         </div>
         <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" id="title" name="title" required placeholder="My New Article">
+            <input type="text" id="title" name="title" required placeholder="My New Article" value="${esc(titleVal)}">
         </div>
         <div class="form-group">
             <label for="slug">Slug</label>
-            <input type="text" id="slug" name="slug" required placeholder="my-new-article">
+            <input type="text" id="slug" name="slug" required placeholder="my-new-article" value="${esc(slugVal)}">
         </div>
         <div class="form-group">
             <label for="collection">Collection (optional)</label>
             <div class="combobox-wrapper">
-                <input type="text" id="collection" name="collection" placeholder="Choose or type to add" autocomplete="off">
+                <input type="text" id="collection" name="collection" placeholder="Choose or type to add" autocomplete="off" value="${esc(collectionVal)}">
                 <ul id="collectionMenu" class="combobox-menu"></ul>
             </div>
         </div>
         <div class="form-group">
             <label for="content">Content (Markdown)</label>
-            <textarea id="content" name="content" required placeholder="# Hello World\n\nWrite your content here..."></textarea>
+            <textarea id="content" name="content" required placeholder="# Hello World\n\nWrite your content here...">${esc(contentVal)}</textarea>
         </div>
-        <button type="submit" class="btn-submit" id="submitBtn">Publish</button>
+        ${isEdit ? `<input type="hidden" name="originalFile" value="${esc(originalFileVal)}">` : ''}
+        ${isEdit ? `<input type="hidden" name="originalSlug" value="${esc(slugVal)}">` : ''}
+        <button type="submit" class="btn-submit" id="submitBtn">${isEdit ? 'Update Article' : 'Publish'}</button>
     </form>
 </div>
 
@@ -388,7 +425,7 @@ function renderPublishPage() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Publishing...';
+        submitBtn.textContent = '${isEdit ? 'Updating...' : 'Publishing...'}';
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
@@ -412,7 +449,7 @@ function renderPublishPage() {
         } catch (error) {
             alert('Error publishing article: ' + error.message);
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Publish';
+            submitBtn.textContent = '${isEdit ? 'Update Article' : 'Publish'}';
         }
     });
 </script>
@@ -468,6 +505,8 @@ function renderPublishPage() {
 async function handlePublish(request: Request) {
     try {
         const { token, title, slug, content, collection } = await request.json() as any;
+        // detect edit mode
+        const originalFile = (await request.json())?.originalFile;
         
         if (!token || !title || !slug || !content) {
             return new Response('Missing required fields', { status: 400 });
@@ -477,17 +516,33 @@ async function handlePublish(request: Request) {
         const repo = 'misaka23323.com';
         const date = new Date().toISOString().split('T')[0];
         
-        // Use timestamp (YYYYMMDDHHmmss) in filename to ensure uniqueness
-        const now = new Date();
-        const timestamp = now.getFullYear() +
-            String(now.getMonth() + 1).padStart(2, '0') +
-            String(now.getDate()).padStart(2, '0') +
-            String(now.getHours()).padStart(2, '0') +
-            String(now.getMinutes()).padStart(2, '0') +
-            String(now.getSeconds()).padStart(2, '0');
-            
-        const filename = `${timestamp}-${slug}.md`;
-        const filePath = `src/articles/${filename}`;
+        let filePath = '';
+        let currentFileSha: string | undefined = undefined;
+
+        // If originalFile provided, use it (edit mode). Otherwise create a new file with timestamp.
+        const bodyJson = await request.json() as any;
+        const providedOriginalFile = bodyJson.originalFile || '';
+        if (providedOriginalFile) {
+            filePath = providedOriginalFile.replace(/^\.\//, '');
+            // fetch file metadata to get sha for update
+            try {
+                const meta = await githubFetch(filePath, { method: 'GET' });
+                currentFileSha = meta.sha;
+            } catch (e) {
+                // ignore, will attempt update without sha and let GitHub error if necessary
+            }
+        } else {
+            // Use timestamp (YYYYMMDDHHmmss) in filename to ensure uniqueness
+            const now = new Date();
+            const timestamp = now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') +
+                String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0') +
+                String(now.getSeconds()).padStart(2, '0');
+            const filename = `${timestamp}-${slug}.md`;
+            filePath = `src/articles/${filename}`;
+        }
         
         // Helper to call GitHub API
         const githubFetch = async (path: string, options: any = {}): Promise<any> => {
@@ -507,13 +562,16 @@ async function handlePublish(request: Request) {
             return res.json();
         };
 
-        // 1. Create the markdown file
+        // 1. Create or update the markdown file
+        const putBody: any = {
+            message: providedOriginalFile ? `Update article: ${title}` : `Add article: ${title}`,
+            content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
+        };
+        if (currentFileSha) putBody.sha = currentFileSha;
+
         await githubFetch(filePath, {
             method: 'PUT',
-            body: JSON.stringify({
-                message: `Add article: ${title}`,
-                content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
-            }),
+            body: JSON.stringify(putBody),
         });
 
         // 2. Update articles.json
@@ -522,22 +580,30 @@ async function handlePublish(request: Request) {
         const currentFile = await githubFetch(articlesJsonPath);
         const currentContent = JSON.parse(decodeURIComponent(escape(atob(currentFile.content))));
         
-        // Add new article
+        // Add or update article entry in articles.json
+        // Determine the file path string used in articles.json (prefixed with ./articles/...)
+        const fileRef = `./${filePath}`.replace(/^\.\//, './');
+
         const newArticle: any = {
             title,
             slug,
             date,
-            file: `./articles/${filename}`
+            file: fileRef
         };
+        if (collection) newArticle.collection = collection;
 
-        // include collection if provided
-        if (collection) {
-            newArticle.collection = collection;
-        }
-        
-        const newContent = [...currentContent, newArticle];
+        // replace existing if editing
+        let updated = false;
+        const newContent = currentContent.map((entry: any) => {
+            if (entry.file === providedOriginalFile || entry.slug === bodyJson.originalSlug) {
+                updated = true;
+                return newArticle;
+            }
+            return entry;
+        });
+        if (!updated) newContent.push(newArticle);
 
-        // Update file
+        // Update articles.json
         await githubFetch(articlesJsonPath, {
             method: 'PUT',
             body: JSON.stringify({
@@ -575,7 +641,8 @@ async function renderArticlePage(slug: string) {
     </div>
 </div>
 `;
-    return render(article.title, content);
+    const navHtml = renderNavBar(true, slug);
+    return render(article.title, content, navHtml);
 }
 
 export default {
@@ -599,7 +666,8 @@ export default {
     }
 
     if (path === '/publish') {
-        return new Response(renderPublishPage(), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
+        const html = await renderPublishPage(url);
+        return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
     if (path === '/api/publish' && request.method === 'POST') {
