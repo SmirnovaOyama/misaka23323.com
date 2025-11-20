@@ -347,7 +347,7 @@ async function renderArticlesPage(url?: URL) {
         <h1>Articles</h1>
         <div style="display:flex;gap:0.5rem;align-items:center;">
             <a href="/publish" class="btn-primary">Publish Article</a>
-            <button id="refreshArticles" class="btn-primary" style="background:transparent;color:var(--text-color);border:1px solid #eaeaea;padding:0.45rem 0.75rem;border-radius:6px;">Refresh Articles</button>
+            <button id="refreshArticles" class="btn-primary">Refresh Articles</button>
         </div>
     </div>
     ${collectionsHtml}
