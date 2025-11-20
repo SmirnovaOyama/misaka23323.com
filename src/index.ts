@@ -345,13 +345,99 @@ async function renderArticlesPage(url?: URL) {
 <div class="article-list">
     <div class="header-actions">
         <h1>Articles</h1>
-        <a href="/publish" class="btn-primary">Publish Article</a>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            <a href="/publish" class="btn-primary">Publish Article</a>
+            <button id="refreshArticles" class="btn-primary" style="background:transparent;color:var(--text-color);border:1px solid #eaeaea;padding:0.45rem 0.75rem;border-radius:6px;">Refresh Articles</button>
+        </div>
     </div>
     ${collectionsHtml}
-    ${articlesHtml}
+    <div id="articlesContainer">
+        ${articlesHtml}
+    </div>
 </div>
 `;
-    return render("Articles", content);
+    return render("Articles", content + `
+<script>
+    (function(){
+        const btn = document.getElementById('refreshArticles');
+        if (!btn) return;
+        btn.addEventListener('click', async function(){
+            try{
+                btn.disabled = true;
+                btn.textContent = 'Refreshing...';
+                const resp = await fetch('${BASE_URL}/articles.json');
+                if (!resp.ok) throw new Error('Network response was not ok');
+                const list = await resp.json();
+
+                // sort by date desc
+                list.sort((a,b)=> new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                const urlParams = new URL(window.location.href).searchParams;
+                const collectionFilter = urlParams.get('collection') || '';
+
+                const container = document.getElementById('articlesContainer');
+                if (container) {
+                    const filtered = collectionFilter ? list.filter(a => a.collection === collectionFilter) : list;
+                    // Clear container
+                    container.innerHTML = '';
+                    filtered.forEach(article => {
+                        const item = document.createElement('div');
+                        item.className = 'article-item';
+
+                        const h2 = document.createElement('h2');
+                        const a = document.createElement('a');
+                        a.href = '/articles/' + encodeURIComponent(article.slug || '');
+                        a.textContent = article.title || '';
+                        h2.appendChild(a);
+
+                        if (article.collection) {
+                            const span = document.createElement('span');
+                            span.className = 'article-tag';
+                            const link = document.createElement('a');
+                            link.href = '/articles?collection=' + encodeURIComponent(article.collection);
+                            link.textContent = article.collection;
+                            span.appendChild(link);
+                            h2.appendChild(document.createTextNode(' '));
+                            h2.appendChild(span);
+                        }
+
+                        item.appendChild(h2);
+                        const p = document.createElement('p');
+                        p.textContent = article.date || '';
+                        item.appendChild(p);
+                        container.appendChild(item);
+                    });
+                }
+
+                // rebuild collections dropdown
+                const collections = Array.from(new Set(list.map(a => a.collection).filter(Boolean)));
+                const items = ['All', ...collections];
+                const menu = document.getElementById('cdMenu');
+                const toggle = document.getElementById('cdToggle');
+                if (menu && toggle) {
+                    menu.innerHTML = items.map(it => {
+                        const value = it === 'All' ? '' : encodeURIComponent(it);
+                        return '<li class="cd-item"><button type="button" data-value="' + value + '">' + it + '</button></li>';
+                    }).join('\n');
+
+                    // reattach handlers
+                    Array.from(menu.querySelectorAll('button[data-value]')).forEach(btnEl => {
+                        btnEl.addEventListener('click', function(){
+                            const v = this.dataset.value || '';
+                            if (!v) location.href = '/articles'; else location.href = '/articles?collection=' + v;
+                        });
+                    });
+                }
+
+            } catch (err) {
+                alert('Refresh failed: ' + (err && err.message ? err.message : err));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Refresh Articles';
+            }
+        });
+    })();
+</script>`);
 }
 
 function renderPublishPage() {
