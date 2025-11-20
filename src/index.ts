@@ -73,6 +73,7 @@ const navBar = `
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
         <li class="nav-item"><button id="navRefreshArticles" class="btn-primary">Refresh Articles</button></li>
+        <li class="nav-item"><button id="navRefreshArticle" class="btn-primary reader-only">Refresh Article</button></li>
         <li class="nav-item dropdown">
             <a href="#">Projects ▾</a>
             <ul class="dropdown-menu">
@@ -209,6 +210,11 @@ const scripts = `
     document.addEventListener('DOMContentLoaded', function(){
         const navBtn = document.getElementById('navRefreshArticles');
         if (navBtn) navBtn.addEventListener('click', function(e){ e.preventDefault(); refreshArticlesGlobal(); });
+        const navArticleBtn = document.getElementById('navRefreshArticle');
+        if (navArticleBtn) navArticleBtn.addEventListener('click', function(e){ e.preventDefault();
+            // On reader page, reload the currently open article to fetch latest content
+            location.reload();
+        });
     });
 </script>
 `;
@@ -755,6 +761,16 @@ async function renderArticlePage(slug: string) {
         ${htmlContent}
     </div>
 </div>
+<script>
+    (function(){
+        try{
+            const btn = document.getElementById('navRefreshArticle');
+            if (btn) {
+                btn.style.display = 'inline-flex';
+            }
+        } catch(e) { /* ignore */ }
+    })();
+</script>
 `;
     return render(article.title, content);
 }

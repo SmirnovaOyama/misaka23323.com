@@ -352,6 +352,11 @@ body {
     cursor: not-allowed;
 }
 
+/* Only shown on reader (single article) pages */
+.reader-only {
+    display: none !important;
+}
+
 /* Collections dropdown styling */
 .collections {
     margin: 1rem 0;
