@@ -2,6 +2,10 @@
   "name": "misaka23323-com",
   "compatibility_date": "2025-11-19",
   "main": "src/index.ts",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
   "rules": [
     {
       "type": "Text",

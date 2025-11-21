@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Gemini 2048</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              game: {
+                bg: '#bbada0',
+                grid: '#cdc1b4',
+              }
+            },
+            animation: {
+              'pop': 'pop 0.2s ease-in-out',
+              'appear': 'appear 0.2s ease-in-out',
+            },
+            keyframes: {
+              pop: {
+                '0%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.2)' },
+                '100%': { transform: 'scale(1)' },
+              },
+              appear: {
+                '0%': { transform: 'scale(0)' },
+                '100%': { transform: 'scale(1)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #faf8ef;
+        color: #776e65;
+        touch-action: none; /* Prevent scrolling on mobile while swiping */
+      }
+    </style>
+
+<link rel="stylesheet" href="/styles.css">
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/2048/assets/index-Cb4riN-h.js"></script>
+</head>
+  <body style="padding-top: 60px;">
+<div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+<div class="overlay"></div>
+<nav class="navbar">
+    <a href="/" class="logo">Mahiro Oyama</a>
+    <div class="menu-toggle">☰</div>
+    <ul class="nav-links">
+        <li class="nav-item"><a href="/">Home</a></li>
+        <li class="nav-item"><a href="/articles">Articles</a></li>
+        <li class="nav-item"><a href="/2048/">2048 Game</a></li>
+        <li class="nav-item" id="navRefreshItem" style="display:none"><a href="#" id="navRefreshBtn">Refresh Article</a></li>
+        <li class="nav-item dropdown">
+            <a href="#">Projects ▾</a>
+            <ul class="dropdown-menu">
+                <li class="dropdown-item"><a href="#web-dev">Web Dev</a></li>
+                <li class="dropdown-item"><a href="#mobile-apps">Mobile Apps</a></li>
+                <li class="dropdown-item"><a href="#open-source">Open Source</a></li>
+            </ul>
+        </li>
+        <li class="nav-item"><a href="#about">About</a></li>
+    </ul>
+</nav>
+    <div id="root"></div>
+<script>
+    // Mobile Menu Toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    const overlay = document.querySelector('.overlay');
+    
+    function toggleMenu() {
+        navLinks.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+    }
+
+    if (menuToggle && navLinks && overlay) {
+        menuToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+
+        // Close menu when clicking a link
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // Don't close menu if clicking a dropdown toggle
+                if (link.parentElement.classList.contains('dropdown')) {
+                    e.preventDefault();
+                    return;
+                }
+                if (navLinks.classList.contains('active')) toggleMenu();
+            });
+        });
+    }
+
+    // Mobile Dropdown Toggle
+    const dropdowns = document.querySelectorAll('.dropdown');
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.stopPropagation(); // Prevent bubbling to navLinks click
+                dropdown.classList.toggle('active');
+            }
+        });
+    });
+
+    // Progress Bar
+    window.onscroll = function() {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        const progressBar = document.getElementById("progressBar");
+        if (progressBar) {
+            progressBar.style.width = scrolled + "%";
+        }
+    };
+</script>
+</body>
+</html>

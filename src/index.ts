@@ -75,6 +75,7 @@ export interface Env {
   //
   // Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
   // MY_SERVICE: Fetcher;
+  ASSETS: Fetcher;
 }
 
 // CSS moved to styles.css
@@ -90,6 +91,7 @@ const navBar = `
     <ul class="nav-links">
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
+        <li class="nav-item"><a href="/2048/">2048 Game</a></li>
         <li class="nav-item" id="navRefreshItem" style="display:none"><a href="#" id="navRefreshBtn">Refresh Article</a></li>
         <li class="nav-item dropdown">
             <a href="#">Projects ▾</a>
@@ -393,7 +395,7 @@ async function renderArticlesPage(url?: URL) {
                     const filtered = collectionFilter ? list.filter(a => a.collection === collectionFilter) : list;
                     // Clear container
                     container.innerHTML = '';
-                    filtered.forEach(article => {
+                    filtered.forEach article => {
                         const item = document.createElement('div');
                         item.className = 'article-item';
 
@@ -766,6 +768,25 @@ export default {
 
     if (path === '/api/publish' && request.method === 'POST') {
         return handlePublish(request);
+    }
+
+    if (path.startsWith('/2048')) {
+        // Handle 2048 game assets
+        let response = await env.ASSETS.fetch(request);
+        
+        if (response.status === 404) {
+            // If accessing /2048 without slash, redirect to /2048/
+            if (path === '/2048') {
+                return Response.redirect(url.origin + '/2048/', 301);
+            }
+            // If accessing a directory (ending in /), try index.html
+            if (path.endsWith('/')) {
+                const newUrl = new URL(url);
+                newUrl.pathname += 'index.html';
+                response = await env.ASSETS.fetch(new Request(newUrl, request));
+            }
+        }
+        return response;
     }
 
     const articleMatch = path.match(/^\/articles\/(.+)/);
