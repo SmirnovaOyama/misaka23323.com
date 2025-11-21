@@ -1,4 +1,3 @@
-# Whispers in the Wind
 
 They say if you listen closely enough, the wind will tell you secrets. I never believed it until I moved to the countryside.
 

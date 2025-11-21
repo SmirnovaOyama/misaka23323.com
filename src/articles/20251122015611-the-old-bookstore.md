@@ -1,4 +1,3 @@
-# The Old Bookstore
 
 There's a bookstore on the corner of 5th and Main that only appears when you're not looking for it. I stumbled upon it one Tuesday when I was trying to escape a sudden downpour.
 

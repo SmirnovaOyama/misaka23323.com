@@ -1,4 +1,3 @@
-# Coffee Shop Chronicles
 
 I go to the same coffee shop every morning. I order the same drink, sit at the same table, and watch the same people come and go.
 

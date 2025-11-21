@@ -1,4 +1,3 @@
-# Starlight Dreams
 
 As a child, I used to lie on the grass and stare up at the stars. I imagined that each one was a world waiting to be discovered.
 
