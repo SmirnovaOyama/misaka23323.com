@@ -192,6 +192,7 @@ body {
     font-weight: 600;
     line-height: 1.25;
     color: var(--text-color);
+    scroll-margin-top: calc(var(--nav-height) + 20px);
 }
 
 .content h1 { font-size: 2em; border-bottom: 1px solid #eaeaea; padding-bottom: 0.3em; }
