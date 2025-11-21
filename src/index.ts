@@ -14,6 +14,17 @@ marked.use(markedKatex({
     }
 }));
 
+const renderer = {
+  heading(text: string, level: number) {
+    const slug = text.toLowerCase()
+      .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return `<h${level} id="${slug}">${text}</h${level}>`;
+  }
+};
+
+marked.use({ renderer });
+
 const GITHUB_OWNER = 'Mahironya';
 const GITHUB_REPO = 'misaka23323.com';
 const GITHUB_BRANCH = 'main';
