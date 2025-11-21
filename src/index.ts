@@ -155,7 +155,7 @@ const scripts = `
 </script>
 `;
 
-function render(title: string, content: string) {
+function render(title: string, content: string, metaTags: string = '') {
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -163,6 +163,7 @@ function render(title: string, content: string) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
+    ${metaTags}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="/styles.css">
 </head>
@@ -683,7 +684,7 @@ async function handlePublish(request: Request) {
     }
 }
 
-async function renderArticlePage(slug: string) {
+async function renderArticlePage(slug: string, url: string) {
     const articles = await fetchArticlesList();
     const article = articles.find((a: any) => a.slug === slug);
     if (!article) {
@@ -691,7 +692,24 @@ async function renderArticlePage(slug: string) {
     }
 
     const markdown = await fetchArticleContent(article.file);
-    const htmlContent = marked(markdown);
+    const htmlContent = await marked(markdown);
+
+    // Generate description for meta tags
+    const plainText = htmlContent.replace(/<[^>]+>/g, '');
+    const description = plainText.substring(0, 200).replace(/\s+/g, ' ').trim() + '...';
+    const escapedDescription = description.replace(/"/g, '&quot;');
+    const escapedTitle = article.title.replace(/"/g, '&quot;');
+
+    const metaTags = `
+    <meta property="og:title" content="${escapedTitle}" />
+    <meta property="og:description" content="${escapedDescription}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="${url}" />
+    <meta property="og:site_name" content="Mahiro Oyama" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="${escapedTitle}" />
+    <meta name="twitter:description" content="${escapedDescription}" />
+    `;
 
     const collectionHtml = (article as any).collection ? ` <span class="article-tag"><a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a></span>` : '';
 
@@ -737,7 +755,7 @@ async function renderArticlePage(slug: string) {
     })();
 </script>
 `;
-    return render(article.title, content);
+    return render(article.title, content, metaTags);
 }
 
 export default {
@@ -790,7 +808,7 @@ export default {
     const articleMatch = path.match(/^\/articles\/(.+)/);
     if (articleMatch) {
         const slug = articleMatch[1];
-        const response = await renderArticlePage(slug);
+        const response = await renderArticlePage(slug, request.url);
         if (response instanceof Response) {
             return response;
         }
