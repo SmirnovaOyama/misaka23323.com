@@ -700,27 +700,54 @@ async function renderArticlePage(slug: string, url: string) {
     const escapedDescription = description.replace(/"/g, '&quot;');
     const escapedTitle = article.title.replace(/"/g, '&quot;');
 
+    // Extract first image for meta tags
+    const imageMatch = markdown.match(/!\[.*?\]\((.*?)\)/);
+    let imageUrl = '';
+    if (imageMatch) {
+        imageUrl = imageMatch[1];
+        if (!imageUrl.startsWith('http')) {
+             const urlObj = new URL(url);
+             if (imageUrl.startsWith('/')) {
+                 imageUrl = urlObj.origin + imageUrl;
+             } else {
+                 const clean = imageUrl.replace(/^\.\//, '');
+                 imageUrl = `${urlObj.origin}/articles/${clean}`;
+             }
+        }
+    }
+
     const metaTags = `
     <meta property="og:title" content="${escapedTitle}" />
     <meta property="og:description" content="${escapedDescription}" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="${url}" />
     <meta property="og:site_name" content="Mahiro Oyama" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="article:published_time" content="${article.date}" />
+    <meta property="article:author" content="Mahiro Oyama" />
+    ${imageUrl ? `<meta property="og:image" content="${imageUrl}" />` : ''}
+    <meta name="twitter:card" content="${imageUrl ? 'summary_large_image' : 'summary'}" />
     <meta name="twitter:title" content="${escapedTitle}" />
     <meta name="twitter:description" content="${escapedDescription}" />
+    ${imageUrl ? `<meta name="twitter:image" content="${imageUrl}" />` : ''}
+    <meta name="description" content="${escapedDescription}" />
+    <meta name="author" content="Mahiro Oyama" />
     `;
 
     const collectionHtml = (article as any).collection ? ` <span class="article-tag"><a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a></span>` : '';
 
     const content = `
-<div class="article-content">
-    <h1>${article.title}${collectionHtml}</h1>
-    <p class="article-meta">${article.date}</p>
-    <div class="content">
+<article class="article-content">
+    <header>
+        <h1>${article.title}${collectionHtml}</h1>
+        <div class="article-meta">
+            <address class="author">By <a href="/" rel="author">Mahiro Oyama</a></address>
+            <time datetime="${article.date}" pubdate>${article.date}</time>
+        </div>
+    </header>
+    <div class="content" data-speechify-content>
         ${htmlContent}
     </div>
-</div>
+</article>
 <script>
     (function() {
         const navItem = document.getElementById('navRefreshItem');
