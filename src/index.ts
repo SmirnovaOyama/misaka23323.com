@@ -91,14 +91,11 @@ const navBar = `
     <ul class="nav-links">
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
-        <li class="nav-item"><a href="/2048/">2048 Game</a></li>
         <li class="nav-item" id="navRefreshItem" style="display:none"><a href="#" id="navRefreshBtn">Refresh Article</a></li>
         <li class="nav-item dropdown">
             <a href="#">Projects ▾</a>
             <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#web-dev">Web Dev</a></li>
-                <li class="dropdown-item"><a href="#mobile-apps">Mobile Apps</a></li>
-                <li class="dropdown-item"><a href="#open-source">Open Source</a></li>
+                <li class="dropdown-item"><a href="/2048/">2048 Game</a></li>
             </ul>
         </li>
         <li class="nav-item"><a href="#about">About</a></li>

@@ -81,7 +81,7 @@ body {
 .dropdown-menu {
     position: absolute;
     top: 100%;
-    left: 0;
+    left: 50%;
     background: white;
     border: 1px solid #eaeaea;
     border-radius: 8px;
@@ -89,7 +89,7 @@ body {
     min-width: 180px;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(10px);
+    transform: translateX(-50%) translateY(10px);
     transition: all 0.2s ease;
     list-style: none;
     padding: 0.5rem 0;
@@ -99,7 +99,7 @@ body {
 .dropdown:hover .dropdown-menu {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
 }
 
 .dropdown-item a {
