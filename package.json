@@ -2,8 +2,13 @@
   "name": "misaka23323-com",
   "version": "1.0.0",
   "description": "Personal website",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "deploy": "wrangler deploy"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "katex": "^0.16.25",
