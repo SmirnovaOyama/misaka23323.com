@@ -637,10 +637,12 @@ body {
         width: 100%;
         border-left: 2px solid #eaeaea;
         margin-top: 0.5rem;
+        left: auto; /* Reset left */
     }
     
     .dropdown.active .dropdown-menu {
         display: block;
+        transform: none; /* Ensure transform is reset when active */
     }
 
     .container {
