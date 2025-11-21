@@ -19,5 +19,12 @@
     "date": "2025-11-19",
     "file": "articles/20251119150804-duck-physics-problem.md",
     "collection": "Physics"
+  },
+  {
+    "title": "矩阵的一些运算方法",
+    "slug": "matrix1",
+    "date": "2025-11-21",
+    "file": "./articles/20251121074453-matrix1.md",
+    "collection": "Mathematics"
   }
 ]
