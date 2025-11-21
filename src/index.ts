@@ -276,23 +276,18 @@ function renderHomePage() {
 <div class="hero">
     <div class="hero-content">
         <h1>Hello, I'm<br>Mahiro Oyama</h1>
-        <p>A passionate developer building things for the web. I specialize in TypeScript, React, and Cloudflare Workers.</p>
+        <p>An undergraduate student from China.</p>
     </div>
     
     <div class="hero-links">
         <a href="/articles" class="link-card">
             <h3>Articles <span>→</span></h3>
-            <p>Read my latest thoughts on technology and development.</p>
+            <p>Wrote some interesting stuffs ( ´▽｀)</p>
         </a>
         
         <div class="link-card">
             <h3>Projects</h3>
             <p>Check out what I've been working on.</p>
-            <div class="sub-links">
-                <span class="tag">Web Dev</span>
-                <span class="tag">Mobile Apps</span>
-                <span class="tag">Open Source</span>
-            </div>
         </div>
     </div>
 </div>
