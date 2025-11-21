@@ -316,7 +316,7 @@ async function renderArticlesPage(url?: URL) {
         const itemsHtml = items.map(it => {
             const value = it === 'All' ? '' : encodeURIComponent(it);
             return `<li class="cd-item"><button type="button" data-value="${value}">${it}</button></li>`;
-        }).join('\\n');
+        }).join('');
 
         const collectionsHtml = `
             <div class="collections">
@@ -425,7 +425,7 @@ async function renderArticlesPage(url?: URL) {
                     menu.innerHTML = items.map(it => {
                         const value = it === 'All' ? '' : encodeURIComponent(it);
                         return '<li class="cd-item"><button type="button" data-value="' + value + '">' + it + '</button></li>';
-                    }).join('\\n');
+                    }).join('');
 
                     // reattach handlers
                     Array.from(menu.querySelectorAll('button[data-value]')).forEach(btnEl => {
