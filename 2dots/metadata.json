@@ -1,0 +1,5 @@
+{
+  "name": "Connect Dots",
+  "description": "A vibrant puzzle game where you connect dots of the same color. Form squares to clear the board and beat the high score!",
+  "requestFramePermissions": []
+}

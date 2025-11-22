@@ -106,6 +106,7 @@ const navBar = `
             <a href="#">Projects ▾</a>
             <ul class="dropdown-menu">
                 <li class="dropdown-item"><a href="/2048/">2048 Game</a></li>
+                <li class="dropdown-item"><a href="/2dots/">2dots Game</a></li>
             </ul>
         </li>
         <li class="nav-item"><a href="#about">About</a></li>
@@ -854,6 +855,25 @@ export default {
             // If accessing /2048 without slash, redirect to /2048/
             if (path === '/2048') {
                 return Response.redirect(url.origin + '/2048/', 301);
+            }
+            // If accessing a directory (ending in /), try index.html
+            if (path.endsWith('/')) {
+                const newUrl = new URL(url);
+                newUrl.pathname += 'index.html';
+                response = await env.ASSETS.fetch(new Request(newUrl, request));
+            }
+        }
+        return response;
+    }
+
+    if (path.startsWith('/2dots')) {
+        // Handle 2dots game assets
+        let response = await env.ASSETS.fetch(request);
+        
+        if (response.status === 404) {
+            // If accessing /2dots without slash, redirect to /2dots/
+            if (path === '/2dots') {
+                return Response.redirect(url.origin + '/2dots/', 301);
             }
             // If accessing a directory (ending in /), try index.html
             if (path.endsWith('/')) {
