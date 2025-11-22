@@ -99,6 +99,7 @@ const navBar = `
     <a href="/" class="logo">Mahiro Oyama</a>
     <div class="menu-toggle">☰</div>
     <ul class="nav-links">
+        <li class="mobile-close-btn">✕</li>
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
         <li class="nav-item" id="navRefreshItem" style="display:none"><a href="#" id="navRefreshBtn">Refresh Article</a></li>
@@ -120,6 +121,7 @@ const scripts = `
     const menuToggle = document.querySelector('.menu-toggle');
     const navLinks = document.querySelector('.nav-links');
     const overlay = document.querySelector('.overlay');
+    const closeBtn = document.querySelector('.mobile-close-btn');
     
     function toggleMenu() {
         navLinks.classList.toggle('active');
@@ -128,6 +130,7 @@ const scripts = `
     }
 
     menuToggle.addEventListener('click', toggleMenu);
+    if (closeBtn) closeBtn.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', toggleMenu);
 
     // Close menu when clicking a link
