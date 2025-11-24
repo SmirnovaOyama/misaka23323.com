@@ -1,5 +1,5 @@
 {
-  "name": "Connect Dots",
-  "description": "A vibrant puzzle game where you connect dots of the same color. Form squares to clear the board and beat the high score!",
+  "name": "Two Dots",
+  "description": "A minimalist puzzle game about connecting dots. Connect same-colored dots vertically or horizontally. Form a square to clear the board of that color!",
   "requestFramePermissions": []
 }

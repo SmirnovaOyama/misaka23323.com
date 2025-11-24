@@ -1,32 +1,42 @@
-import { DotColor, GameConfig } from './types';
 
-export const GAME_CONFIG: GameConfig = {
-  rows: 6,
-  cols: 6,
-  moves: 100,
+import { DotColor } from './types';
+
+export const DEFAULT_GRID_SIZE = 6;
+export const MAX_MOVES = 30;
+
+// Available grid options for the UI
+export const GRID_OPTIONS = [6, 8, 10];
+
+// Flat, authentic colors (similar to popular dot games)
+export const COLOR_PALETTE: Record<DotColor, string> = {
+  [DotColor.Red]: 'bg-[#E74C3C]',
+  [DotColor.Blue]: 'bg-[#3498DB]',
+  [DotColor.Green]: 'bg-[#2ECC71]',
+  [DotColor.Yellow]: 'bg-[#F1C40F]',
+  [DotColor.Purple]: 'bg-[#9B59B6]',
 };
 
-export const COLOR_STYLES: Record<DotColor, string> = {
-  [DotColor.Red]: 'bg-red-500',
-  [DotColor.Blue]: 'bg-blue-500',
-  [DotColor.Green]: 'bg-emerald-500',
-  [DotColor.Yellow]: 'bg-amber-400',
-  [DotColor.Purple]: 'bg-violet-500',
+// Matching stroke colors for lines
+export const STROKE_COLOR: Record<DotColor, string> = {
+    [DotColor.Red]: '#E74C3C',
+    [DotColor.Blue]: '#3498DB',
+    [DotColor.Green]: '#2ECC71',
+    [DotColor.Yellow]: '#F1C40F',
+    [DotColor.Purple]: '#9B59B6',
 };
 
-export const LINE_COLORS: Record<DotColor, string> = {
-  [DotColor.Red]: '#ef4444', // red-500
-  [DotColor.Blue]: '#3b82f6', // blue-500
-  [DotColor.Green]: '#10b981', // emerald-500
-  [DotColor.Yellow]: '#fbbf24', // amber-400
-  [DotColor.Purple]: '#8b5cf6', // violet-500
+export const COLOR_BORDER: Record<DotColor, string> = {
+    [DotColor.Red]: 'border-[#E74C3C]',
+    [DotColor.Blue]: 'border-[#3498DB]',
+    [DotColor.Green]: 'border-[#2ECC71]',
+    [DotColor.Yellow]: 'border-[#F1C40F]',
+    [DotColor.Purple]: 'border-[#9B59B6]',
 };
 
-// Ambient background colors - made very subtle/white for the new theme or unused
-export const BG_COLORS: Record<DotColor, string> = {
-  [DotColor.Red]: 'bg-red-50',
-  [DotColor.Blue]: 'bg-blue-50',
-  [DotColor.Green]: 'bg-emerald-50',
-  [DotColor.Yellow]: 'bg-amber-50',
-  [DotColor.Purple]: 'bg-violet-50',
-};
+export const COLORS = [
+  DotColor.Red,
+  DotColor.Blue,
+  DotColor.Green,
+  DotColor.Yellow,
+  DotColor.Purple,
+];

@@ -18,11 +18,6 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      },
-      base: '/2dots/',
-      build: {
-        outDir: '../public/2dots',
-        emptyOutDir: true
       }
     };
 });

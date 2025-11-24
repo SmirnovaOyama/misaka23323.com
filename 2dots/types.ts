@@ -1,25 +1,27 @@
 export enum DotColor {
-  Red = 'RED',
-  Blue = 'BLUE',
-  Green = 'GREEN',
-  Yellow = 'YELLOW',
-  Purple = 'PURPLE',
+  Red = 'Red',
+  Blue = 'Blue',
+  Green = 'Green',
+  Yellow = 'Yellow',
+  Purple = 'Purple',
 }
 
-export interface Coordinate {
+export interface Point {
   row: number;
   col: number;
 }
 
 export interface DotItem {
-  id: string;
+  id: string; // Unique ID for Framer Motion keys
   color: DotColor;
+  row: number; // Current visual position (for logic, we might rely on array index, but explicit row/col helps animations)
+  col: number;
+  isNew?: boolean; // For entrance animation
 }
 
-export type GridState = (DotItem | null)[][]; // null represents empty space before gravity fills it
-
-export interface GameConfig {
-  rows: number;
-  cols: number;
-  moves: number;
+export interface GameState {
+  grid: DotItem[][]; // [row][col]
+  score: number;
+  movesRemaining: number;
+  isPlaying: boolean;
 }

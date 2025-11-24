@@ -409,7 +409,7 @@ async function renderArticlesPage(url?: URL) {
                     const filtered = collectionFilter ? list.filter(a => a.collection === collectionFilter) : list;
                     // Clear container
                     container.innerHTML = '';
-                    filtered.forEach article => {
+                    filtered.forEach(article => {
                         const item = document.createElement('div');
                         item.className = 'article-item';
 
