@@ -40,6 +40,41 @@
                 padding: 1.25rem 1rem;
             }
         }
+
+        .maintenance-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            backdrop-filter: blur(6px);
+        }
+
+        .maintenance-overlay__panel {
+            background: rgba(15, 23, 42, 0.85);
+            border-radius: 20px;
+            padding: 2rem 2.5rem;
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+        }
+
+        .maintenance-overlay__title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .maintenance-overlay__text {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.85);
+        }
     </style>
 <link rel="stylesheet" href="/styles.css">
     <script type="importmap">
@@ -81,6 +116,13 @@
 <main class="miku-stage">
     <div id="app"></div>
 </main>
+
+<div class="maintenance-overlay" aria-live="polite" role="status">
+    <div class="maintenance-overlay__panel">
+        <div class="maintenance-overlay__title">Unable for service</div>
+        <div class="maintenance-overlay__text">We&rsquo;re currently maintaining the MikuBot experience. Please check back a little later while we finish up.</div>
+    </div>
+</div>
 
 <script>
     // Mobile Menu Toggle
