@@ -333,7 +333,7 @@ export default function App() {
   const flatDots = grid.flat();
 
   return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] bg-slate-50 relative selection:bg-none overflow-hidden touch-none select-none">
+    <div className="flex flex-col items-center justify-start pt-2 md:pt-4 -mt-4 md:-mt-8 h-[100dvh] bg-slate-50 relative selection:bg-none overflow-hidden touch-none select-none">
       
       {/* Header Area */}
       <div className="w-full max-w-md px-6 pb-6 pt-2 flex flex-col gap-4 z-20 shrink-0">
