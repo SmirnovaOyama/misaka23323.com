@@ -33,5 +33,12 @@
     "date": "2025-11-27",
     "file": "./articles/20251127115339-about-me.md",
     "collection": "About"
+  },
+  {
+    "title": "Privacy Policy",
+    "slug": "privacy-policy",
+    "date": "2025-11-27",
+    "file": "./articles/20251127143433-privacy-policy.md",
+    "collection": "Privacy Policy"
   }
 ]
