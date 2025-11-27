@@ -26,5 +26,12 @@
     "date": "2025-11-21",
     "file": "./articles/20251121074453-matrix1.md",
     "collection": "Mathematics"
+  },
+  {
+    "title": "About Me",
+    "slug": "about-me",
+    "date": "2025-11-27",
+    "file": "./articles/20251127115339-about-me.md",
+    "collection": "About"
   }
 ]
