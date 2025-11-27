@@ -40,5 +40,12 @@
     "date": "2025-11-27",
     "file": "./articles/20251127143433-privacy-policy.md",
     "collection": "Privacy Policy"
+  },
+  {
+    "title": "还没有名字的地方",
+    "slug": "untitled-place",
+    "date": "2025-11-27",
+    "file": "./articles/20251127170653-untitled-place.md",
+    "collection": "Stories"
   }
 ]
