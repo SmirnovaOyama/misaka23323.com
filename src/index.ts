@@ -111,7 +111,8 @@ const navBar = `
                 <li class="dropdown-item"><a href="/MikuBot/">MikuBot</a></li>
             </ul>
         </li>
-        <li class="nav-item"><a href="#about">About</a></li>
+        <li class="nav-item"><a href="/articles/about-me">About</a></li>
+        <li class="nav-item"><a href="/articles/privacy-policy">Privacy Policy</a></li>
     </ul>
 </nav>
 `;
