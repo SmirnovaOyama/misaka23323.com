@@ -47,5 +47,12 @@
     "date": "2025-11-27",
     "file": "./articles/20251127170653-untitled-place.md",
     "collection": "Stories"
+  },
+  {
+    "title": "手工噪声（by ChatGPT）",
+    "slug": "manual-noise",
+    "date": "2025-11-28",
+    "file": "./articles/20251128012453-manual-noise.md",
+    "collection": "Stories"
   }
 ]
