@@ -34,7 +34,7 @@ function escapeHtml(value: string) {
         .replace(/'/g, '&#39;');
 }
 
-const GITHUB_OWNER = 'Mahironya';
+const GITHUB_OWNER = 'SmirnovaOyama';
 const GITHUB_REPO = 'misaka23323.com';
 const GITHUB_BRANCH = 'main';
 const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/src`;
@@ -619,7 +619,7 @@ async function handlePublish(request: Request) {
             return new Response('Missing required fields', { status: 400 });
         }
 
-        const owner = 'Mahironya';
+        const owner = 'SmirnovaOyama';
         const repo = 'misaka23323.com';
         const date = new Date().toISOString().split('T')[0];
         
