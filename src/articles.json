@@ -68,5 +68,12 @@
     "date": "2025-11-28",
     "file": "./articles/20251128062423-Glitch-in-the-fourth-wall.md",
     "collection": "Stories"
+  },
+  {
+    "title": "Test Callouts",
+    "slug": "test-callouts",
+    "date": "2025-12-02",
+    "file": "articles/test-callouts.md",
+    "collection": "Test"
   }
 ]
