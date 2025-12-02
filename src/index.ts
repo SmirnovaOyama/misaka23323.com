@@ -14,6 +14,43 @@ marked.use(markedKatex({
     }
 }));
 
+const calloutExtension = {
+    name: 'callout',
+    level: 'block' as const,
+    start(src: string) { return src.match(/^:{3}/)?.index; },
+    tokenizer(this: any, src: string, tokens: any) {
+        const rule = /^:{3}(info|success|warning|error)(?:\[(.*?)\])?(?:\{(.*?)\})?\n([\s\S]*?)\n:{3}(?:\n|$)/;
+        const match = rule.exec(src);
+        if (match) {
+            const token = {
+                type: 'callout',
+                raw: match[0],
+                kind: match[1],
+                title: match[2],
+                attrs: match[3],
+                text: match[4].trim(),
+                tokens: []
+            };
+            this.lexer.blockTokens(token.text, token.tokens);
+            return token;
+        }
+    },
+    renderer(this: any, token: any) {
+        const isOpen = token.attrs && token.attrs.includes('open');
+        const title = token.title || token.kind.toUpperCase();
+        const kind = token.kind;
+        const body = this.parser.parse(token.tokens);
+        return `<div class="callout callout-${kind}">
+            <details ${isOpen ? 'open' : ''}>
+                <summary>${title}</summary>
+                <div class="callout-body">${body}</div>
+            </details>
+        </div>`;
+    }
+};
+
+marked.use({ extensions: [calloutExtension] });
+
 const renderer = {
   heading(text: string, level: number) {
     const slug = text.toLowerCase()
