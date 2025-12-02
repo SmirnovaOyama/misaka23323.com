@@ -1,6 +1,4 @@
-# Test Callouts
-
-This is a test article to demonstrate the new Callouts feature.
+> This is a test article to demonstrate the new Callouts feature.
 
 :::info
 This is an info callout.
