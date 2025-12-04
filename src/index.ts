@@ -745,7 +745,9 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
     }
 
     const markdown = await fetchArticleContent(article.file);
-    const htmlContent = await marked(markdown);
+    // Strip YAML frontmatter if present
+    const contentWithoutFrontmatter = markdown.replace(/^---\n[\s\S]*?\n---\n/, '');
+    const htmlContent = await marked(contentWithoutFrontmatter);
 
     // Generate description for meta tags
     const plainText = htmlContent.replace(/<[^>]+>/g, '');
