@@ -75,5 +75,12 @@
     "date": "2025-12-02",
     "file": "articles/test-callouts.md",
     "collection": "Test"
+  },
+  {
+    "title": "HRT Recorder 雌二醇药代动力学模型详解",
+    "slug": "estrogen-model-summary",
+    "date": "2025-12-05",
+    "file": "articles/estrogen-model-summary.md",
+    "collection": "Medical"
   }
 ]
