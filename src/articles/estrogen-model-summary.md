@@ -99,10 +99,11 @@
 $$
 \text{toE2Factor}(\text{ester}) =
 \begin{cases}
-1, & \text{ester} = \mathrm{E2} \
+1, & \text{ester} = \mathrm{E2} \\[6pt]
 \dfrac{MW_{\mathrm{E2}}}{MW_{\text{ester}}}, & \text{其他酯类}
 \end{cases}
 $$
+
 
 :::warning[重要]{open}
 当需要从“酯的 mg”折算到“理论 E2 mg 当量”时，必须乘以该因子。这是因为酯类药物中包含酯基的重量，而我们关注的是水解后的雌二醇重量。
@@ -665,3 +666,5 @@ $$
    $$
 
 ---
+
+(全文完)
