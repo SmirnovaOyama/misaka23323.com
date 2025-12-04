@@ -1,5 +1,6 @@
-> 此文章为网站 https://hrt.misaka23323.com 底层医学模型的具体解释, 更新时间：2025 年 12 月 5 日
-
+> 此文章为网站 https://hrt.misaka23323.com 底层医学模型的具体解释<br>
+> 更新时间：2025 年 12 月 5 日<br>
+>  paste 备份：https://paste.sheartm.com/aaaaaace
 ## 目录
 
 1. [总体概览](#总体概览)
@@ -371,10 +372,11 @@ $$
    $$
    k_a =
    \begin{cases}
-   k_{\text{AbsEV}} = 0.05, & \text{ester} = EV \
+   k_{\text{AbsEV}} = 0.05, & \text{ester} = EV \\[6pt]
    k_{\text{AbsE2}} = 0.32, & \text{其他情况}
    \end{cases}
    $$
+
 
 2. 消除速率：
 
