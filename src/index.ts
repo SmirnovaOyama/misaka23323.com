@@ -132,6 +132,16 @@ const navBar = `
     <div class="progress-bar" id="progressBar"></div>
 </div>
 <div class="overlay"></div>
+<div class="modal-overlay" id="externalLinkModal">
+    <div class="modal-content">
+        <div class="modal-title">Leaving Site</div>
+        <p class="modal-text">You are about to visit an external website. Continue?</p>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Continue</button>
+        </div>
+    </div>
+</div>
 <nav class="navbar">
     <a href="/" class="logo">Mahiro Oyama</a>
     <div class="menu-toggle">☰</div>
@@ -205,6 +215,48 @@ const scripts = `
             progressBar.style.width = scrolled + "%";
         }
     };
+
+    // External Link Modal
+    const modal = document.getElementById('externalLinkModal');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    let targetUrl = '';
+
+    function showModal(url) {
+        targetUrl = url;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        targetUrl = '';
+    }
+
+    if (cancelBtn) cancelBtn.addEventListener('click', hideModal);
+    
+    if (confirmBtn) confirmBtn.addEventListener('click', () => {
+        if (targetUrl) {
+            window.open(targetUrl, '_blank');
+            hideModal();
+        }
+    });
+
+    if (modal) modal.addEventListener('click', (e) => {
+        if (e.target === modal) hideModal();
+    });
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link) {
+            const href = link.href;
+            if (href && href.startsWith('http') && new URL(href).hostname !== window.location.hostname) {
+                e.preventDefault();
+                showModal(href);
+            }
+        }
+    });
 </script>
 `;
 
