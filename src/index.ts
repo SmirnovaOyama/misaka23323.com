@@ -386,7 +386,7 @@ function renderProjectsPage() {
             <div class="project-preview" style="background-color: #34495e;">
                 <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="30" cy="50" r="15" fill="#e74c3c"/>
-                    <circle cx="70" cy="50" r="15" fill="#3498db"/>
+                    <circle cx="70" cy="50" r="15" fill="#e74c3c"/>
                     <line x1="45" y1="50" x2="55" y2="50" stroke="white" stroke-width="4" stroke-linecap="round"/>
                 </svg>
             </div>
