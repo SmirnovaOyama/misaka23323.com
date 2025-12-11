@@ -146,18 +146,10 @@ const navBar = `
     <a href="/" class="logo">Mahiro Oyama</a>
     <div class="menu-toggle">☰</div>
     <ul class="nav-links">
-        <li class="mobile-close-btn">✕</li>
         <li class="nav-item"><a href="/">Home</a></li>
         <li class="nav-item"><a href="/articles">Articles</a></li>
         <li class="nav-item" id="navRefreshItem" style="display:none"><a href="#" id="navRefreshBtn">Refresh Article</a></li>
-        <li class="nav-item dropdown">
-            <a href="#">Projects ▾</a>
-            <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="/2048/">2048 Game</a></li>
-                <li class="dropdown-item"><a href="/2dots/">2dots Game</a></li>
-                <li class="dropdown-item"><a href="/MikuBot/">MikuBot</a></li>
-            </ul>
-        </li>
+        <li class="nav-item"><a href="/projects">Projects</a></li>
         <li class="nav-item"><a href="/articles/about-me">About</a></li>
         <li class="nav-item"><a href="/articles/privacy-policy">Privacy Policy</a></li>
     </ul>
@@ -260,6 +252,26 @@ const scripts = `
 </script>
 `;
 
+async function injectLayout(response: Response) {
+    const contentType = response.headers.get('content-type');
+    if (response.ok && contentType && contentType.includes('text/html')) {
+        let text = await response.text();
+        // Inject styles and spacer
+        text = text.replace('</head>', '<link rel="stylesheet" href="/styles.css">\n<style>body { padding-top: var(--nav-height); }</style>\n</head>');
+        // Inject navbar
+        text = text.replace('<body>', '<body>\n' + navBar);
+        // Inject scripts
+        text = text.replace('</body>', scripts + '\n</body>');
+        
+        return new Response(text, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers
+        });
+    }
+    return response;
+}
+
 function render(title: string, content: string, metaTags: string = '') {
     return `
 <!DOCTYPE html>
@@ -285,100 +297,6 @@ function render(title: string, content: string, metaTags: string = '') {
 
 function renderHomePage() {
     const content = `
-<style>
-.hero {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 4rem;
-    min-height: calc(100vh - var(--nav-height) - 8rem);
-}
-
-.hero-content {
-    flex: 1;
-    max-width: 500px;
-}
-
-.hero h1 {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    font-weight: 800;
-    line-height: 1.2;
-}
-
-.hero p {
-    font-size: 1.2rem;
-    color: var(--secondary-text);
-    margin-bottom: 2rem;
-}
-
-.hero-links {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    max-width: 400px;
-}
-
-.link-card {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 12px;
-    text-decoration: none;
-    color: var(--text-color);
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-}
-
-.link-card:hover {
-    background: var(--card-hover);
-    transform: translateY(-2px);
-    border-color: #eaeaea;
-}
-
-.link-card h3 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.link-card p {
-    font-size: 0.95rem;
-    color: var(--secondary-text);
-    margin-bottom: 0;
-}
-
-.sub-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
-.tag {
-    background: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    color: var(--secondary-text);
-    border: 1px solid #eaeaea;
-}
-
-@media (max-width: 768px) {
-    .hero {
-        flex-direction: column;
-        gap: 3rem;
-        justify-content: center;
-    }
-
-    .hero-content, .hero-links {
-        max-width: 100%;
-    }
-}
-</style>
 <div class="hero">
     <div class="hero-content">
         <h1>Hello, I'm<br>Mahiro Oyama</h1>
@@ -399,6 +317,114 @@ function renderHomePage() {
 </div>
 `;
     return render("Mahiro Oyama", content);
+}
+
+function renderProjectsPage() {
+    const content = `
+<style>.container { padding-top: calc(var(--nav-height) + 1.5rem) !important; }</style>
+<div class="article-list">
+    <h1>Projects</h1>
+    <p style="color: var(--secondary-text); margin-bottom: 2rem;">Tools and games made with ❤️.</p>
+    <div class="projects-grid">
+        <a href="https://hrt.misaka23323.com" target="_blank" class="project-card">
+            <div class="project-preview" style="background-color: #ff6b81;">
+                <svg width="80" height="80" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path style="fill:#AFAFAF;" d="M64.2,3.67c4.09,0,13.2,8.02,13.2,8.02S93.43,10.12,96.42,12c2.99,1.89,5.82,16.03,5.82,16.03
+                        s11.48,2.04,13.52,5.03c2.04,2.99,0.79,16.98,0.79,16.98s7.86,8.8,7.55,13.2s-8.02,13.36-8.02,13.36s2.67,14.31,0.94,17.45
+                        c-1.73,3.14-14.46,8.8-14.46,8.8s-4.72,12.1-6.92,13.52c-2.2,1.41-18.39-0.31-18.39-0.31s-9.75,8.49-12.42,8.65
+                        c-2.67,0.16-13.2-8.8-13.2-8.8s-16.03,2.2-18.39,0.79c-2.66-1.59-6.6-12.89-6.6-12.89s-12.69-3.26-14.78-6.6
+                        c-1.57-2.52-1.1-17.29-1.1-17.29S3.72,69.22,3.52,64.82c-0.16-3.46,8.33-13.36,8.33-13.36s-1.26-15.56,0.47-18.55
+                        s11.79-3.93,11.79-3.93s4.56-14.62,7.7-16.51s18.55,0.63,18.55,0.63S60.42,3.67,64.2,3.67z"/>
+                    <path style="fill:#E2E2E2;" d="M64.04,7.29c-1.88-0.17-11.95,9.59-11.95,9.59s-15.41-1.57-17.13-0.79
+                        c-1.73,0.79-6.6,15.41-6.6,15.41s-11.48,1.57-13.05,3.77s0.79,17.13,0.79,17.13S7.6,62.78,7.6,64.51c0,1.73,7.86,13.52,7.86,13.52
+                        s-1.41,11.79-0.47,13.36c0.94,1.57,13.68,5.97,13.68,5.97s4.09,12.89,6.29,13.68c2.2,0.79,17.61-1.41,17.61-1.41
+                        s9.9,7.55,11.63,7.55c1.73,0,11.16-8.02,11.16-8.02s16.66,1.89,18.24,1.26s8.02-13.99,8.02-13.99s11.79-3.93,12.42-5.82
+                        s-2.36-16.98-2.36-16.98s8.96-9.75,8.8-12.26c-0.16-2.52-7.86-10.85-7.86-10.85s1.26-13.99,0.16-15.88
+                        c-1.1-1.89-13.52-3.77-13.52-3.77s-3.14-14.31-4.72-15.25c-1.57-0.94-16.82,0.79-16.82,0.79S65.77,7.45,64.04,7.29z"/>
+                    <path style="fill:#FEFFFF;" d="M64.2,12.63c0,0,10.53,8.17,11.95,8.49c1.41,0.31,15.41-1.73,15.41-1.73s2.99,13.83,3.93,14.78
+                        s13.05,3.62,13.05,3.62s-0.31,13.2,0.16,13.99c0.47,0.79,6.92,9.75,6.92,9.75s-8.02,9.9-8.33,11.16s2.99,15.88,2.99,15.88
+                        s-11.32,4.4-12.26,5.19c-0.94,0.79-6.29,12.1-6.29,12.1s-15.56-1.73-17.45-1.26c-1.89,0.47-9.75,6.92-9.75,6.92
+                        s-9.75-6.29-11.16-6.76c-1.41-0.47-16.35,1.73-16.35,1.73s-4.87-12.1-5.66-12.89c-0.79-0.79-11.63-5.03-11.63-5.03
+                        s0.79-12.26,0.47-13.2c-0.31-0.94-7.23-11.16-7.23-11.16s7.23-9.59,7.7-11.63s-0.94-14.62-0.94-14.62s11.63-2.67,12.42-3.46
+                        c0.79-0.79,5.19-14.78,5.19-14.78s14.31,2.2,15.88,1.89S64.2,12.63,64.2,12.63z"/>
+                    <path style="fill:#EF7EAD;" d="M67.54,29.39c0.24,1.93-5.32,2.25-11.38,5.3c-5.56,2.8-25.58,16.83-14.3,39.29
+                        c4.98,9.92,14.98,13.91,25.58,12.64c13.13-1.57,23.93-12.25,20.52-26.07c-2.13-8.63-8.25-11.86-14.36-12.56
+                        c-8.4-0.96-15.48,4.97-15.6,11.39c-0.19,10.99,12.94,9.73,12.74,4.08s2.92-6.13,3.79-6.22c0.88-0.1,4.77,0.78,4.96,5.84
+                        s-3.3,15.11-16.24,14.2c-13.71-0.96-15.18-14.29-14.5-19.73c0.34-2.73,3.51-17.32,20.73-18.49c17.29-1.17,26.77,12.4,27.36,23.68
+                        c1.17,22.56-16.66,34.48-35.53,33.41S30.48,78.66,30.87,59.79c0.41-19.84,17.15-27.88,22.03-30.02
+                        C58.19,27.46,67.25,27.01,67.54,29.39z"/>
+                </svg>
+            </div>
+            <div class="project-info">
+                <h3>Oyama's HRT Tracker</h3>
+                <p>Personal Hormone Replacement Therapy tracking dashboard and data visualization.</p>
+                <div class="project-tags">
+                    <span class="project-tag">Health</span>
+                    <span class="project-tag">Data</span>
+                </div>
+            </div>
+        </a>
+        <a href="/2048/" class="project-card">
+            <div class="project-preview" style="background-color: #edc22e;">
+                <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="35" height="35" rx="4" fill="white" fill-opacity="0.9"/>
+                    <rect x="55" y="10" width="35" height="35" rx="4" fill="white" fill-opacity="0.5"/>
+                    <rect x="10" y="55" width="35" height="35" rx="4" fill="white" fill-opacity="0.5"/>
+                    <rect x="55" y="55" width="35" height="35" rx="4" fill="white" fill-opacity="0.3"/>
+                </svg>
+            </div>
+            <div class="project-info">
+                <h3>2048 Game</h3>
+                <p>The classic sliding tile puzzle game. Join the numbers and get to the 2048 tile!</p>
+                <div class="project-tags">
+                    <span class="project-tag">Game</span>
+                    <span class="project-tag">Puzzle</span>
+                </div>
+            </div>
+        </a>
+        <a href="/2dots/" class="project-card">
+            <div class="project-preview" style="background-color: #34495e;">
+                <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="30" cy="50" r="15" fill="#e74c3c"/>
+                    <circle cx="70" cy="50" r="15" fill="#3498db"/>
+                    <line x1="45" y1="50" x2="55" y2="50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="project-info">
+                <h3>2dots Game</h3>
+                <p>Connect dots of the same color to clear them.</p>
+                <div class="project-tags">
+                    <span class="project-tag">Game</span>
+                    <span class="project-tag">Puzzle</span>
+                </div>
+            </div>
+        </a>
+        <div class="project-card" style="opacity: 0.6; cursor: not-allowed; filter: grayscale(1);">
+            <div class="project-preview" style="background-color: #39c5bb;">
+                <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="30" width="60" height="50" rx="8" fill="white"/>
+                    <circle cx="35" cy="50" r="5" fill="#39c5bb"/>
+                    <circle cx="65" cy="50" r="5" fill="#39c5bb"/>
+                    <path d="M40 70 Q50 75 60 70" stroke="#39c5bb" stroke-width="3" stroke-linecap="round"/>
+                    <rect x="15" y="40" width="10" height="20" rx="2" fill="white"/>
+                    <rect x="75" y="40" width="10" height="20" rx="2" fill="white"/>
+                    <path d="M50 30 L50 15" stroke="white" stroke-width="3"/>
+                    <circle cx="50" cy="12" r="4" fill="white"/>
+                </svg>
+            </div>
+            <div class="project-info">
+                <h3>MikuBot <span style="font-size: 0.7em; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 8px;">Unavailable</span></h3>
+                <p>Chat with Hatsune Miku!</p>
+                <div class="project-tags">
+                    <span class="project-tag">Bot</span>
+                    <span class="project-tag">Tool</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+    return render("Projects", content);
 }
 
 async function renderArticlesPage(url?: URL) {
@@ -935,6 +961,10 @@ export default {
         return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
+    if (path === '/projects') {
+        return new Response(renderProjectsPage(), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
+    }
+
     if (path === '/publish') {
         return new Response(renderPublishPage(), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
@@ -959,7 +989,7 @@ export default {
                 response = await env.ASSETS.fetch(new Request(newUrl, request));
             }
         }
-        return response;
+        return injectLayout(response);
     }
 
     if (path.startsWith('/2dots')) {
@@ -979,7 +1009,7 @@ export default {
             }
         }
 
-        return response;
+        return injectLayout(response);
     }
 
     if (path.startsWith('/MikuBot')) {
@@ -999,7 +1029,7 @@ export default {
             }
         }
 
-        return response;
+        return injectLayout(response);
     }
 
     const articleMatch = path.match(/^\/articles\/(.+)/);
