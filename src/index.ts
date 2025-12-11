@@ -256,8 +256,8 @@ async function injectLayout(response: Response) {
     const contentType = response.headers.get('content-type');
     if (response.ok && contentType && contentType.includes('text/html')) {
         let text = await response.text();
-        // Inject styles and spacer
-        text = text.replace('</head>', '<link rel="stylesheet" href="/styles.css">\n<style>body { padding-top: var(--nav-height); }</style>\n</head>');
+        // Inject styles, favicon, and spacer
+        text = text.replace('</head>', '<link rel="icon" href="/favicon.ico">\n<link rel="stylesheet" href="/styles.css">\n<style>body { padding-top: var(--nav-height); }</style>\n</head>');
         // Inject navbar
         text = text.replace('<body>', '<body>\n' + navBar);
         // Inject scripts
@@ -281,6 +281,7 @@ function render(title: string, content: string, metaTags: string = '') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     ${metaTags}
+    <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="/styles.css">
 </head>
@@ -315,7 +316,7 @@ function renderHomePage() {
         </a>
     </div>
 </div>
-<div class="article-card" style="margin-top: 1rem; text-align: center;">
+<div class="article-card icp-banner" style="margin-top: 0.2rem; text-align: center; font-size: 0.95rem; padding: 0.85rem 1rem;">
     <a href="https://icp.gov.moe/?keyword=20255514" target="_blank">萌ICP备20255514号</a>
 </div>
 `;
@@ -362,10 +363,12 @@ function renderProjectsPage() {
             </div>
             <div class="project-info">
                 <h3>Oyama's HRT Tracker</h3>
-                <p>Personal Hormone Replacement Therapy tracking dashboard and data visualization.</p>
+                <p>Record your estradiol Valerate dosage and estimate the Estrogen level.</p>
                 <div class="project-tags">
-                    <span class="project-tag">Health</span>
-                    <span class="project-tag">Data</span>
+                    <span class="project-tag">Tool</span>
+                    <span class="project-tag">Estrogen</span>
+                    <span class="project-tag">HRT</span>
+                    <span class="project-tag">小药娘</span>
                 </div>
             </div>
         </a>
@@ -380,7 +383,7 @@ function renderProjectsPage() {
             </div>
             <div class="project-info">
                 <h3>2048 Game</h3>
-                <p>The classic sliding tile puzzle game. Join the numbers and get to the 2048 tile!</p>
+                <p>A simple 2048 game, pretty good for killing time.</p>
                 <div class="project-tags">
                     <span class="project-tag">Game</span>
                     <span class="project-tag">Puzzle</span>
@@ -419,7 +422,7 @@ function renderProjectsPage() {
             </div>
             <div class="project-info">
                 <h3>MikuBot <span style="font-size: 0.7em; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 8px;">Unavailable</span></h3>
-                <p>Chat with Hatsune Miku!</p>
+                <p>Chat with Hatsune Miku! Currently unavailable beacuse of API leak.</p>
                 <div class="project-tags">
                     <span class="project-tag">Bot</span>
                     <span class="project-tag">Tool</span>
@@ -443,15 +446,33 @@ async function renderArticlesPage(url?: URL) {
 
     const filtered = collectionFilter ? sortedArticles.filter(a => (a as any).collection === collectionFilter) : sortedArticles;
 
-    const articlesHtml = filtered.map(article => `
-        <div class="article-item">
-            <h2>
-                <a href="/articles/${article.slug}">${article.title}</a>
-                ${(article as any).collection ? ` <span class="article-tag"><a href="/articles?collection=${encodeURIComponent((article as any).collection)}">${(article as any).collection}</a></span>` : ''}
-            </h2>
-            <p>${article.date}</p>
+    const getCollectionColor = (name?: string) => {
+        if (!name) return '#94a3b8';
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = (hash << 5) - hash + name.charCodeAt(i);
+            hash |= 0;
+        }
+        const hue = Math.abs(hash) % 360;
+        const sat = 65;
+        const light = 55;
+        return `hsl(${hue}, ${sat}%, ${light}%)`;
+    };
+
+    const articlesHtml = filtered.map((article) => {
+        const collection = (article as any).collection;
+        const accent = getCollectionColor(collection);
+        return `
+        <div class="article-card">
+            <span class="article-card__bar" style="background:${accent}"></span>
+            <div class="article-card__meta">
+                <span class="article-card__date">${article.date}</span>
+                ${collection ? `<span class="article-card__tag" style="background:color-mix(in srgb, ${accent} 20%, transparent);color:${accent};">${collection}</span>` : ''}
+            </div>
+            <h2><a href="/articles/${article.slug}">${article.title}</a></h2>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
         // Render a custom dropdown server-side using available collections
         const items = ['All', ...collections];
@@ -502,7 +523,7 @@ async function renderArticlesPage(url?: URL) {
         </div>
     </div>
     ${collectionsHtml}
-    <div id="articlesContainer">
+    <div id="articlesContainer" class="article-grid">
         ${articlesHtml}
     </div>
 </div>
@@ -510,6 +531,19 @@ async function renderArticlesPage(url?: URL) {
     return render("Articles", content + `
 <script>
     (function(){
+        const getCollectionColor = (name) => {
+            if (!name) return '#94a3b8';
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = (hash << 5) - hash + name.charCodeAt(i);
+                hash |= 0;
+            }
+            const hue = Math.abs(hash) % 360;
+            const sat = 65;
+            const light = 55;
+            return 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
+        };
+
         const refresh = async function(btn) {
             try {
                 btn.classList.add('btn-loading');
@@ -531,30 +565,38 @@ async function renderArticlesPage(url?: URL) {
                     // Clear container
                     container.innerHTML = '';
                     filtered.forEach(article => {
+                        const accent = getCollectionColor(article.collection);
                         const item = document.createElement('div');
-                        item.className = 'article-item';
+                        item.className = 'article-card';
+
+                        const bar = document.createElement('span');
+                        bar.className = 'article-card__bar';
+                        bar.style.background = accent;
+                        item.appendChild(bar);
+
+                        const meta = document.createElement('div');
+                        meta.className = 'article-card__meta';
+                        const date = document.createElement('span');
+                        date.className = 'article-card__date';
+                        date.textContent = article.date || '';
+                        meta.appendChild(date);
+                        if (article.collection) {
+                            const tag = document.createElement('span');
+                            tag.className = 'article-card__tag';
+                            tag.style.background = 'color-mix(in srgb, ' + accent + ' 20%, transparent)';
+                            tag.style.color = accent;
+                            tag.textContent = article.collection;
+                            meta.appendChild(tag);
+                        }
+                        item.appendChild(meta);
 
                         const h2 = document.createElement('h2');
                         const a = document.createElement('a');
                         a.href = '/articles/' + encodeURIComponent(article.slug || '');
                         a.textContent = article.title || '';
                         h2.appendChild(a);
-
-                        if (article.collection) {
-                            const span = document.createElement('span');
-                            span.className = 'article-tag';
-                            const link = document.createElement('a');
-                            link.href = '/articles?collection=' + encodeURIComponent(article.collection);
-                            link.textContent = article.collection;
-                            span.appendChild(link);
-                            h2.appendChild(document.createTextNode(' '));
-                            h2.appendChild(span);
-                        }
-
                         item.appendChild(h2);
-                        const p = document.createElement('p');
-                        p.textContent = article.date || '';
-                        item.appendChild(p);
+
                         container.appendChild(item);
                     });
                 }
