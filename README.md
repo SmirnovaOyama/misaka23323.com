@@ -4,4 +4,4 @@ Personal website.
 
 ## Acknowledgements
 
-This website is Vibe Coded using **Google Gemini 3**.
+This website is Vibe Coded using **Google AI Studio**.

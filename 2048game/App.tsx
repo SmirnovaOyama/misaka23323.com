@@ -10,7 +10,7 @@ import {
 import Board from './components/Board';
 import GameControls from './components/GameControls';
 
-const LOCAL_STORAGE_BEST_KEY = 'gemini-2048-best-score';
+const LOCAL_STORAGE_BEST_KEY = 'ai-2048-best-score';
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>({

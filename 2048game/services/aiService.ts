@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Grid, HintResponse, Direction } from "../types";
 
 const API_KEY = process.env.API_KEY || '';
+const MODEL_NAME = process.env.MODEL_NAME || "flash-2.5";
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
@@ -29,7 +30,7 @@ export const getBestMove = async (grid: Grid): Promise<HintResponse> => {
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: MODEL_NAME,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -57,7 +58,7 @@ export const getBestMove = async (grid: Grid): Promise<HintResponse> => {
     const json = JSON.parse(text) as HintResponse;
     return json;
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("AI API Error:", error);
     // Fallback if API fails
     return {
       direction: Direction.DOWN,
@@ -65,3 +66,4 @@ export const getBestMove = async (grid: Grid): Promise<HintResponse> => {
     };
   }
 };
+

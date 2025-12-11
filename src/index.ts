@@ -309,11 +309,14 @@ function renderHomePage() {
             <p>Wrote some interesting stuffs ( ´▽｀)</p>
         </a>
         
-        <div class="link-card">
-            <h3>Projects</h3>
+        <a href="/projects" class="link-card">
+            <h3>Projects <span>→</span></h3>
             <p>Check out what I've been working on.</p>
-        </div>
+        </a>
     </div>
+</div>
+<div class="article-card" style="margin-top: 1rem; text-align: center;">
+    <a href="https://icp.gov.moe/?keyword=20255514" target="_blank">萌ICP备20255514号</a>
 </div>
 `;
     return render("Mahiro Oyama", content);
@@ -321,10 +324,12 @@ function renderHomePage() {
 
 function renderProjectsPage() {
     const content = `
-<style>.container { padding-top: calc(var(--nav-height) + 1.5rem) !important; }</style>
+<style>.container { padding-top: calc(var(--nav-height) + 0.75rem) !important; }</style>
 <div class="article-list">
-    <h1>Projects</h1>
-    <p style="color: var(--secondary-text); margin-bottom: 2rem;">Tools and games made with ❤️.</p>
+    <div style="display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+        <h1 style="margin: 0;">Projects</h1>
+
+    </div>
     <div class="projects-grid">
         <a href="https://hrt.misaka23323.com" target="_blank" class="project-card">
             <div class="project-preview" style="background-color: #ff6b81;">

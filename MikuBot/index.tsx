@@ -4,7 +4,7 @@ import { GoogleGenAI, Chat } from "@google/genai";
 
 // --- Configuration ---
 const API_KEY = process.env.API_KEY;
-const MODEL_NAME = "gemini-2.5-flash";
+const MODEL_NAME = process.env.MODEL_NAME || "flash-2.5";
 const MIKU_COLOR = "#39C5BB"; // Hatsune Miku Teal
 const MIKU_DARK = "#2a9d96";
 const MIKU_IMAGE_URL = "https://animenoseichi.com/files/productos/imagen_2024-09-10_143455874_1.png";
