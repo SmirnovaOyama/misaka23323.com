@@ -298,7 +298,7 @@ function render(title: string, content: string, metaTags: string = '') {
 
 function renderHomePage() {
     const content = `
-<div class="hero">
+<div class="hero" style="margin-top: -0.75rem;">
     <div class="hero-content">
         <h1>Hello, I'm<br>Mahiro Oyama</h1>
         <p>An undergraduate student from China.</p>
@@ -325,11 +325,10 @@ function renderHomePage() {
 
 function renderProjectsPage() {
     const content = `
-<style>.container { padding-top: calc(var(--nav-height) + 0.75rem) !important; }</style>
 <div class="article-list">
     <div style="display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
         <h1 style="margin: 0;">Projects</h1>
-
+        <p style="color: var(--secondary-text); margin: 0;">Tools and games made with ❤️.</p>
     </div>
     <div class="projects-grid">
         <a href="https://hrt.misaka23323.com" target="_blank" class="project-card">
