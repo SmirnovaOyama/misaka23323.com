@@ -332,7 +332,7 @@ function renderProjectsPage() {
     </div>
     <div class="projects-grid">
         <a href="https://hrt.misaka23323.com" target="_blank" class="project-card">
-            <div class="project-preview" style="background-color: #ff6b81;">
+            <div class="project-preview" style="background-color:rgba(255, 182, 193, 1);">
                 <svg width="80" height="80" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path style="fill:#AFAFAF;" d="M64.2,3.67c4.09,0,13.2,8.02,13.2,8.02S93.43,10.12,96.42,12c2.99,1.89,5.82,16.03,5.82,16.03
                         s11.48,2.04,13.52,5.03c2.04,2.99,0.79,16.98,0.79,16.98s7.86,8.8,7.55,13.2s-8.02,13.36-8.02,13.36s2.67,14.31,0.94,17.45
@@ -367,7 +367,7 @@ function renderProjectsPage() {
                     <span class="project-tag">Tool</span>
                     <span class="project-tag">Estrogen</span>
                     <span class="project-tag">HRT</span>
-                    <span class="project-tag">小药娘</span>
+
                 </div>
             </div>
         </a>
