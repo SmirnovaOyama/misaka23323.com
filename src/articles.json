@@ -89,5 +89,12 @@
     "date": "2025-12-05",
     "file": "articles/why-rkn-sucks.md",
     "collection": "Opinions"
+  },
+  {
+    "title": "PJSK 晓山瑞希剧情综述",
+    "slug": "pjsk-akiyama-mizuki-plot-summary",
+    "date": "2025-12-15",
+    "file": "./articles/20251215143152-pjsk-akiyama-mizuki-plot-summary.md",
+    "collection": "Stories"
   }
 ]
