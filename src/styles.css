@@ -266,13 +266,83 @@ body {
 }
 .content pre {
     background-color: #f6f8fa;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 1rem;
+    padding-top: 2.5rem;
     overflow: auto;
     margin-bottom: 1rem;
+    position: relative;
+    border: 1px solid #d0d7de;
+    box-shadow: none;
 }
+
+.content pre::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ff5f56;
+    box-shadow: 15px 0 0 #ffbd2e, 30px 0 0 #27c93f;
+    opacity: 0.5;
+}
+
+.content pre:hover::before {
+    opacity: 1;
+}
+
+.content pre[data-lang]::after {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px;
+    right: 50px; /* Space for copy button */
+    color: #6e7781;
+    font-size: 0.75rem;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    opacity: 0.8;
+    font-weight: 600;
+}
+
+/* Copy Button */
+.copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: transparent;
+    border: 1px solid rgba(27, 31, 36, 0.15);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #57606a;
+    padding: 0;
+}
+
+.copy-btn:hover {
+    background-color: #f3f4f6;
+    border-color: rgba(27, 31, 36, 0.25);
+    color: #24292f;
+}
+
+.copy-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.copy-btn.copied {
+    border-color: #2da44e;
+    color: #2da44e;
+}
+
 .content code {
-    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
     font-size: 0.9em;
     background-color: rgba(175, 184, 193, 0.2);
     padding: 0.2em 0.4em;
@@ -281,7 +351,10 @@ body {
 .content pre code {
     background-color: transparent;
     padding: 0;
-    font-size: 100%;
+    font-size: 0.95em;
+    color: #24292f;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+    line-height: 1.5;
 }
 .content img {
     max-width: 100%;

@@ -931,6 +931,63 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
 
     const collectionHtml = section ? ` <span class="article-tag" itemprop="articleSection"><a href="/articles?collection=${encodeURIComponent(section)}">${section}</a></span>` : '';
 
+    const highlightAssets = `
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/cpp.min.js"></script>
+<script>
+    window.applyCodeHighlight = function() {
+        if (!window.hljs) return;
+        document.querySelectorAll('.content pre code').forEach(block => {
+            if (block.dataset && block.dataset.hljsApplied === 'true') return;
+            window.hljs.highlightElement(block);
+            
+            // Add language label
+            const pre = block.parentElement;
+            if (pre && !pre.querySelector('.code-lang')) {
+                const lang = Array.from(block.classList).find(c => c.startsWith('language-'))?.replace('language-', '');
+                if (lang) {
+                    pre.setAttribute('data-lang', lang);
+                }
+            }
+
+            // Add Copy Button
+            if (pre && !pre.querySelector('.copy-btn')) {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.title = 'Copy code';
+                copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"/></svg>';
+                
+                copyBtn.addEventListener('click', () => {
+                    const code = block.innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        const originalHtml = copyBtn.innerHTML;
+                        copyBtn.classList.add('copied');
+                        copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+                        setTimeout(() => {
+                            copyBtn.classList.remove('copied');
+                            copyBtn.innerHTML = originalHtml;
+                        }, 2000);
+                    });
+                });
+                pre.appendChild(copyBtn);
+            }
+
+            if (block.dataset) {
+                block.dataset.hljsApplied = 'true';
+            }
+        });
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.applyCodeHighlight);
+    } else {
+        window.applyCodeHighlight();
+    }
+</script>
+`;
+
+    const metaTagsWithHighlight = [metaTags, highlightAssets].join('\n    ');
+
     const content = `
 <article class="article-content" itemscope itemtype="https://schema.org/Article" data-iv-entry="article">
     <meta itemprop="mainEntityOfPage" content="${canonicalUrl}">
@@ -972,6 +1029,9 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
                     const currentContent = document.querySelector('.article-content');
                     if (newContent && currentContent) {
                         currentContent.innerHTML = newContent.innerHTML;
+                        if (window.applyCodeHighlight) {
+                            window.applyCodeHighlight();
+                        }
                     }
                     await minDelay;
                 } catch (err) {
@@ -984,7 +1044,7 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
     })();
 </script>
 `;
-    return render(article.title, content, metaTags);
+    return render(article.title, content, metaTagsWithHighlight);
 }
 
 export default {
