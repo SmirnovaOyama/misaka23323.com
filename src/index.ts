@@ -931,58 +931,126 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
 
     const collectionHtml = section ? ` <span class="article-tag" itemprop="articleSection"><a href="/articles?collection=${encodeURIComponent(section)}">${section}</a></span>` : '';
 
-    const highlightAssets = `
+const highlightAssets = `
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github.min.css">
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/cpp.min.js"></script>
 <script>
-    window.applyCodeHighlight = function() {
-        if (!window.hljs) return;
-        document.querySelectorAll('.content pre code').forEach(block => {
-            if (block.dataset && block.dataset.hljsApplied === 'true') return;
-            window.hljs.highlightElement(block);
-            
-            // Add language label
-            const pre = block.parentElement;
-            if (pre && !pre.querySelector('.code-lang')) {
-                const lang = Array.from(block.classList).find(c => c.startsWith('language-'))?.replace('language-', '');
-                if (lang) {
-                    pre.setAttribute('data-lang', lang);
+    (function() {
+        const aliasMap = {
+            'js': 'javascript',
+            'ts': 'typescript',
+            'sh': 'bash',
+            'shell': 'bash',
+            'c++': 'cpp',
+            'c#': 'csharp',
+            'cs': 'csharp',
+            'py': 'python',
+            'rs': 'rust',
+            'yml': 'yaml',
+            'md': 'markdown'
+        };
+
+        const preferredLanguages = [
+            'bash','shell','sh','javascript','typescript','js','ts','json','yaml','yml',
+            'cpp','c','c++','python','py','go','rust','rs','java','csharp','cs','html','xml',
+            'css','markdown','md','sql','dockerfile'
+        ];
+
+        const normalize = (lang = '') => {
+            const lower = lang.toLowerCase();
+            return aliasMap[lower] || lower;
+        };
+
+        const availableLanguages = () => {
+            if (!window.hljs) return [];
+            const seen = new Set();
+            const normalized = preferredLanguages.map(normalize);
+            return normalized.filter(lang => {
+                if (!lang || seen.has(lang)) return false;
+                seen.add(lang);
+                return window.hljs.getLanguage(lang);
+            });
+        };
+
+        window.applyCodeHighlight = function() {
+            if (!window.hljs) return;
+
+            const langPool = availableLanguages();
+            if (langPool.length) {
+                window.hljs.configure({ languages: langPool });
+            }
+
+            document.querySelectorAll('.content pre code').forEach(block => {
+                if (block.dataset && block.dataset.hljsApplied === 'true') return;
+
+                const pre = block.parentElement;
+                const langClass = Array.from(block.classList).find(c => c.startsWith('language-'));
+                const rawLang = langClass ? langClass.replace('language-', '') : '';
+                const normalizedLang = normalize(rawLang);
+
+                let finalLang = normalizedLang;
+                let highlighted = '';
+
+                try {
+                    if (normalizedLang && window.hljs.getLanguage(normalizedLang)) {
+                        const { value, language } = window.hljs.highlight(block.textContent, {
+                            language: normalizedLang,
+                            ignoreIllegals: true
+                        });
+                        highlighted = value;
+                        finalLang = language || normalizedLang;
+                    } else {
+                        const { value, language } = window.hljs.highlightAuto(block.textContent, langPool);
+                        highlighted = value;
+                        finalLang = language || '';
+                    }
+                } catch (err) {
+                    highlighted = block.textContent || '';
+                    finalLang = normalizedLang || 'text';
                 }
-            }
 
-            // Add Copy Button
-            if (pre && !pre.querySelector('.copy-btn')) {
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.title = 'Copy code';
-                copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"/></svg>';
-                
-                copyBtn.addEventListener('click', () => {
-                    const code = block.innerText;
-                    navigator.clipboard.writeText(code).then(() => {
-                        const originalHtml = copyBtn.innerHTML;
-                        copyBtn.classList.add('copied');
-                        copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
-                        setTimeout(() => {
-                            copyBtn.classList.remove('copied');
-                            copyBtn.innerHTML = originalHtml;
-                        }, 2000);
+                block.innerHTML = highlighted;
+                block.classList.add('hljs');
+
+                if (pre) {
+                    pre.setAttribute('data-lang', finalLang || 'text');
+                }
+
+                // Add Copy Button
+                if (pre && !pre.querySelector('.copy-btn')) {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.title = 'Copy code';
+                    copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"/></svg>';
+                    
+                    copyBtn.addEventListener('click', () => {
+                        const code = block.innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                            const originalHtml = copyBtn.innerHTML;
+                            copyBtn.classList.add('copied');
+                            copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+                            setTimeout(() => {
+                                copyBtn.classList.remove('copied');
+                                copyBtn.innerHTML = originalHtml;
+                            }, 2000);
+                        });
                     });
-                });
-                pre.appendChild(copyBtn);
-            }
+                    pre.appendChild(copyBtn);
+                }
 
-            if (block.dataset) {
-                block.dataset.hljsApplied = 'true';
-            }
-        });
-    };
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', window.applyCodeHighlight);
-    } else {
-        window.applyCodeHighlight();
-    }
+                if (block.dataset) {
+                    block.dataset.hljsApplied = 'true';
+                }
+            });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.applyCodeHighlight);
+        } else {
+            window.applyCodeHighlight();
+        }
+    })();
 </script>
 `;
 
