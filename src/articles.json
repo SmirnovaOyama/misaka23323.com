@@ -131,5 +131,12 @@
     "date": "2025-12-17",
     "file": "./articles/OOP-chapter-12.md",
     "collection": "OOP"
+  },
+  {
+    "title": "Why Akiyama Mizuki's Gender Matters",
+    "slug": "why-akiyama-mizuki-s-gender-matters",
+    "date": "2025-12-18",
+    "file": "./articles/20251218115107-why-akiyama-mizuki-s-gender-matters.md",
+    "collection": "Opinions"
   }
 ]
