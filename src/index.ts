@@ -1,6 +1,27 @@
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
 import styles from './styles.css';
+import articlesData from './articles.json';
+import articleMyFirst from './articles/my-first-article.md';
+import articleThirtySteps from './articles/20251119150556-thirty-steps.md';
+import articleDuckPhysicsProblem from './articles/20251119150804-duck-physics-problem.md';
+import articleMatrix1 from './articles/20251121074453-matrix1.md';
+import articleWalkSlowly from './articles/20251121083402-walk-slowly.md';
+import articleAboutMe from './articles/20251127115339-about-me.md';
+import articlePrivacyPolicy from './articles/20251127143433-privacy-policy.md';
+import articleUntitledPlace from './articles/20251127170653-untitled-place.md';
+import articleManualNoise from './articles/20251128012453-manual-noise.md';
+import articleCheckedIn from './articles/20251128032236-18:05-checked-in.md';
+import articleFourthWall from './articles/20251128062423-Glitch-in-the-fourth-wall.md';
+import articlePjskAkiyama from './articles/20251215143152-pjsk-akiyama-mizuki-plot-summary.md';
+import articleOop8 from './articles/20251217140923-OOP-8.md';
+import articleEstrogenModel from './articles/estrogen-model-summary.md';
+import articleOop10 from './articles/OOP-chapter-10.md';
+import articleOop11 from './articles/OOP-chapter-11.md';
+import articleOop12 from './articles/OOP-chapter-12.md';
+import articleOop9 from './articles/OOP-chapter-9.md';
+import articleTestCallouts from './articles/test-callouts.md';
+import articleWhyRknSucks from './articles/why-rkn-sucks.md';
 
 marked.use(markedKatex({
     throwOnError: false,
@@ -18,7 +39,7 @@ const calloutExtension = {
     name: 'callout',
     level: 'block' as const,
     start(src: string) { return src.match(/^:{3}/)?.index; },
-    tokenizer(this: any, src: string, tokens: any) {
+    tokenizer(this: any, src: string) {
         const rule = /^:{3}(info|success|warning|error)(?:\[(.*?)\])?(?:\{(.*?)\})?\n([\s\S]*?)\n:{3}(?:\n|$)/;
         const match = rule.exec(src);
         if (match) {
@@ -75,11 +96,32 @@ const GITHUB_OWNER = 'SmirnovaOyama';
 const GITHUB_REPO = 'misaka23323.com';
 const GITHUB_BRANCH = 'main';
 const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/src`;
+const FETCH_TIMEOUT_MS = 3500;
 
-async function fetchArticlesList() {
-    const response = await fetch(`${BASE_URL}/articles.json`);
-    if (!response.ok) return [];
-    const raw = await response.json() as any[];
+const LOCAL_ARTICLES_MAP: Record<string, string> = {
+    'articles/my-first-article.md': articleMyFirst,
+    'articles/20251119150556-thirty-steps.md': articleThirtySteps,
+    'articles/20251119150804-duck-physics-problem.md': articleDuckPhysicsProblem,
+    'articles/20251121074453-matrix1.md': articleMatrix1,
+    'articles/20251121083402-walk-slowly.md': articleWalkSlowly,
+    'articles/20251127115339-about-me.md': articleAboutMe,
+    'articles/20251127143433-privacy-policy.md': articlePrivacyPolicy,
+    'articles/20251127170653-untitled-place.md': articleUntitledPlace,
+    'articles/20251128012453-manual-noise.md': articleManualNoise,
+    'articles/20251128032236-18:05-checked-in.md': articleCheckedIn,
+    'articles/20251128062423-Glitch-in-the-fourth-wall.md': articleFourthWall,
+    'articles/20251215143152-pjsk-akiyama-mizuki-plot-summary.md': articlePjskAkiyama,
+    'articles/20251217140923-OOP-8.md': articleOop8,
+    'articles/estrogen-model-summary.md': articleEstrogenModel,
+    'articles/OOP-chapter-10.md': articleOop10,
+    'articles/OOP-chapter-11.md': articleOop11,
+    'articles/OOP-chapter-12.md': articleOop12,
+    'articles/OOP-chapter-9.md': articleOop9,
+    'articles/test-callouts.md': articleTestCallouts,
+    'articles/why-rkn-sucks.md': articleWhyRknSucks,
+};
+
+function normalizeArticleEntries(raw: any[] = []) {
     // Normalize file paths in case entries point to unexpected locations
     return raw.map(entry => {
         const e = { ...entry } as any;
@@ -96,6 +138,39 @@ async function fetchArticlesList() {
     });
 }
 
+async function fetchJsonWithTimeout(url: string, fallback: any[]): Promise<any[]> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) return fallback;
+        return await response.json() as any[];
+    } catch (_err) {
+        return fallback;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function fetchTextWithTimeout(url: string): Promise<string | null> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) return null;
+        return await response.text();
+    } catch (_err) {
+        return null;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function fetchArticlesList() {
+    const raw = await fetchJsonWithTimeout(`${BASE_URL}/articles.json`, articlesData as any[]);
+    return normalizeArticleEntries(raw);
+}
+
 async function fetchArticleContent(filename: string) {
     // Normalize various possible file path forms to point under `src/articles/`
     let cleanPath = filename.replace(/^\.\//, ''); // remove leading ./
@@ -104,9 +179,13 @@ async function fetchArticleContent(filename: string) {
     if (!cleanPath.startsWith('articles/')) {
         cleanPath = `articles/${cleanPath}`;
     }
-    const response = await fetch(`${BASE_URL}/${cleanPath}`);
-    if (!response.ok) return '';
-    return await response.text();
+
+    const remote = await fetchTextWithTimeout(`${BASE_URL}/${cleanPath}`);
+    if (remote !== null) {
+        return remote;
+    }
+
+    return LOCAL_ARTICLES_MAP[cleanPath] || '';
 }
 
 export interface Env {
@@ -933,56 +1012,154 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
 
     const highlightAssets = `
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github.min.css">
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/cpp.min.js"></script>
+<style>
+/* Light-touch override so identifiers are easier to read (VSCode-like blue) */
+.hljs-identifier { color: #0550ae; }
+</style>
 <script>
-    window.applyCodeHighlight = function() {
+(function() {
+    const HL_CORE = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js';
+    const HL_LANGS = [
+        'cpp','javascript','typescript','python','bash','json','java','c','go','rust','html','css','xml','yaml'
+    ];
+
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const existing = document.querySelector('script[data-src=\"' + src + '\"]');
+            if (existing) {
+                existing.addEventListener('load', () => resolve(null), { once: true });
+                existing.addEventListener('error', reject, { once: true });
+                return;
+            }
+            const s = document.createElement('script');
+            s.src = src;
+            s.dataset.src = src;
+            s.async = true;
+            s.onload = () => resolve(null);
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    async function ensureHighlight() {
+        if (window.hljs) return window.hljs;
+        if (!window.__hlSetup) {
+            window.__hlSetup = (async () => {
+                await loadScript(HL_CORE);
+                for (const lang of HL_LANGS) {
+                    try {
+                        await loadScript('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/' + lang + '.min.js');
+                    } catch (_) {
+                        // ignore missing language load errors
+                    }
+                }
+                return window.hljs;
+            })();
+        }
+        return window.__hlSetup;
+    }
+
+    function addCopyButton(pre, codeEl) {
+        if (pre.querySelector('.copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.title = 'Copy code';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"/></svg>';
+
+        btn.addEventListener('click', () => {
+            const code = codeEl.innerText;
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerHTML;
+                btn.classList.add('copied');
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = original;
+                }, 2000);
+            });
+        });
+        pre.appendChild(btn);
+    }
+
+    function labelLanguage(pre, codeEl) {
+        if (pre.getAttribute('data-lang')) return;
+        const lang = Array.from(codeEl.classList).find(c => c.startsWith('language-'))?.replace('language-', '');
+        if (lang) {
+            pre.setAttribute('data-lang', lang);
+        }
+    }
+
+    const CPP_KEYWORDS = new Set([
+        'alignas','alignof','asm','auto','bool','break','case','catch','char','char8_t','char16_t','char32_t',
+        'class','const','consteval','constexpr','constinit','const_cast','continue','co_await','co_return','co_yield',
+        'decltype','default','delete','do','double','dynamic_cast','else','enum','explicit','export','extern','false',
+        'float','for','friend','goto','if','inline','int','long','mutable','namespace','new','noexcept','nullptr',
+        'operator','private','protected','public','register','reinterpret_cast','requires','return','short','signed',
+        'sizeof','static','static_assert','static_cast','struct','switch','template','this','thread_local','throw',
+        'true','try','typedef','typeid','typename','union','unsigned','using','virtual','void','volatile','wchar_t',
+        'while'
+    ]);
+
+    function enhanceIdentifiers(codeEl) {
+        const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        let node;
+        while ((node = walker.nextNode())) {
+            // Skip text already inside a highlighted span (e.g., keywords, comments, strings)
+            let parent = node.parentElement;
+            let skip = false;
+            while (parent) {
+                if (Array.from(parent.classList).some(c => c.startsWith('hljs-') && c !== 'hljs')) {
+                    skip = true;
+                    break;
+                }
+                parent = parent.parentElement;
+            }
+            if (!skip) nodes.push(node);
+        }
+
+        nodes.forEach(textNode => {
+            const text = textNode.textContent || '';
+            const parts = text.split(/(\\b[\\w_]+\\b)/);
+            const frag = document.createDocumentFragment();
+            parts.forEach(part => {
+                if (/^\\b[\\w_]+\\b$/.test(part) && !CPP_KEYWORDS.has(part)) {
+                    const span = document.createElement('span');
+                    span.className = 'hljs-identifier';
+                    span.textContent = part;
+                    frag.appendChild(span);
+                } else {
+                    frag.appendChild(document.createTextNode(part));
+                }
+            });
+            textNode.replaceWith(frag);
+        });
+    }
+
+    window.applyCodeHighlight = async function(root = document) {
+        await ensureHighlight();
         if (!window.hljs) return;
-        document.querySelectorAll('.content pre code').forEach(block => {
+        const blocks = root.querySelectorAll('.content pre code');
+        blocks.forEach(block => {
             if (block.dataset && block.dataset.hljsApplied === 'true') return;
             window.hljs.highlightElement(block);
-            
-            // Add language label
             const pre = block.parentElement;
-            if (pre && !pre.querySelector('.code-lang')) {
-                const lang = Array.from(block.classList).find(c => c.startsWith('language-'))?.replace('language-', '');
-                if (lang) {
-                    pre.setAttribute('data-lang', lang);
-                }
+            if (pre) {
+                labelLanguage(pre, block);
+                addCopyButton(pre, block);
             }
-
-            // Add Copy Button
-            if (pre && !pre.querySelector('.copy-btn')) {
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.title = 'Copy code';
-                copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"/></svg>';
-                
-                copyBtn.addEventListener('click', () => {
-                    const code = block.innerText;
-                    navigator.clipboard.writeText(code).then(() => {
-                        const originalHtml = copyBtn.innerHTML;
-                        copyBtn.classList.add('copied');
-                        copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
-                        setTimeout(() => {
-                            copyBtn.classList.remove('copied');
-                            copyBtn.innerHTML = originalHtml;
-                        }, 2000);
-                    });
-                });
-                pre.appendChild(copyBtn);
-            }
-
-            if (block.dataset) {
-                block.dataset.hljsApplied = 'true';
-            }
+            enhanceIdentifiers(block);
+            block.dataset.hljsApplied = 'true';
         });
     };
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', window.applyCodeHighlight);
+        document.addEventListener('DOMContentLoaded', () => window.applyCodeHighlight());
     } else {
         window.applyCodeHighlight();
     }
+})();
 </script>
 `;
 
@@ -1048,7 +1225,7 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -1056,6 +1233,12 @@ export default {
       return new Response(styles, {
         headers: { 'Content-Type': 'text/css' },
       });
+    }
+
+    if (path === '/favicon.ico') {
+      // Serve the static favicon from assets to avoid 404s in dev
+      const res = await env.ASSETS.fetch(request);
+      if (res && res.ok) return res;
     }
 
     if (path === '/') {
