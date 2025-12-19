@@ -138,5 +138,12 @@
     "date": "2025-12-18",
     "file": "./articles/20251218115107-why-akiyama-mizuki-s-gender-matters.md",
     "collection": "Opinions"
+  },
+  {
+    "title": "OOP 面向对象期末考试焚决",
+    "slug": "oop-final-hack",
+    "date": "2025-12-19",
+    "file": "./articles/20251219171453-oop-final-hack.md",
+    "collection": "OOP"
   }
 ]
