@@ -959,9 +959,17 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
     const plainText = htmlContent.replace(/<[^>]+>/g, '');
     const trimmedText = plainText.replace(/\s+/g, ' ').trim();
     const summary = trimmedText.length > 200 ? `${trimmedText.substring(0, 200).trim()}...` : trimmedText;
-    const escapedDescription = escapeHtml(summary || 'Mahiro Oyama Article');
+    const escapedDescription = escapeHtml(summary || 'Smirnova Oyama Article');
     const escapedTitle = escapeHtml(article.title);
     const canonicalUrl = url.split('#')[0];
+    const origin = (() => {
+        try {
+            return new URL(canonicalUrl).origin;
+        } catch (err) {
+            return '';
+        }
+    })();
+    const faviconUrl = origin ? `${origin}/favicon.ico` : '/favicon.ico';
     const publishedDate = new Date(`${article.date}T00:00:00Z`);
     const isoPublished = Number.isNaN(publishedDate.getTime()) ? article.date : publishedDate.toISOString();
     const isoModified = isoPublished;
@@ -977,10 +985,11 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
         dateModified: isoModified,
         author: {
             '@type': 'Person',
-            name: 'Mahiro Oyama',
+            name: 'Smirnova Oyama',
         },
         mainEntityOfPage: canonicalUrl,
-        description: summary || 'Mahiro Oyama Article',
+        description: summary || 'Smirnova Oyama Article',
+        image: faviconUrl,
         url: canonicalUrl,
     };
 
@@ -996,14 +1005,16 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
         `<meta property="og:description" content="${escapedDescription}">`,
         `<meta property="og:type" content="article">`,
         `<meta property="og:url" content="${canonicalUrl}">`,
-        `<meta property="og:site_name" content="Mahiro Oyama">`,
+        `<meta property="og:site_name" content="Smirnova Oyama">`,
+        `<meta property="og:image" content="${faviconUrl}">`,
         `<meta property="article:published_time" content="${isoPublished}">`,
         `<meta property="article:modified_time" content="${isoModified}">`,
-        `<meta property="article:author" content="Mahiro Oyama">`,
+        `<meta property="article:author" content="Smirnova Oyama">`,
         section ? `<meta property="article:section" content="${escapedSection}">` : '',
         `<meta name="twitter:card" content="summary_large_image">`,
         `<meta name="twitter:title" content="${escapedTitle}">`,
         `<meta name="twitter:description" content="${escapedDescription}">`,
+        `<meta name="twitter:image" content="${faviconUrl}">`,
         `<meta name="twitter:url" content="${canonicalUrl}">`,
         telegramHandle ? `<meta property="telegram:channel" content="${telegramHandle.startsWith('@') ? telegramHandle : '@' + telegramHandle}">` : '',
         `<script type="application/ld+json">${jsonLdString}</script>`
@@ -1178,8 +1189,8 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
             <time datetime="${isoPublished}" itemprop="datePublished">${article.date}</time>
             <meta itemprop="dateModified" content="${isoModified}">
             <span class="article-author" itemprop="author" itemscope itemtype="https://schema.org/Person">
-                <meta itemprop="name" content="Mahiro Oyama">
-                Mahiro Oyama
+                <meta itemprop="name" content="Smirnova Oyama">
+                Smirnova Oyama
             </span>
         </div>
     </header>
