@@ -331,6 +331,96 @@ const scripts = `
             }
         }
     });
+
+    // Sakura animation on homepage only
+    (function() {
+        const hero = document.querySelector('.hero');
+        if (!hero) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.id = 'sakuraCanvas';
+        canvas.className = 'sakura-canvas';
+        canvas.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const petals = [];
+        const maxPetals = Math.min(70, Math.max(40, Math.floor(window.innerWidth / 18)));
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const rand = (min, max) => Math.random() * (max - min) + min;
+
+        const spawnPetal = () => {
+            petals.push({
+                x: rand(0, canvas.width),
+                y: rand(-canvas.height, 0),
+                r: rand(8, 18),
+                tilt: rand(-0.5, 0.5),
+                spin: rand(0.002, 0.006),
+                drift: rand(-0.2, 0.35),
+                vy: rand(0.8, 1.6),
+                hue: rand(330, 350),
+                sat: rand(65, 80)
+            });
+        };
+
+        while (petals.length < maxPetals) spawnPetal();
+
+        function drawPetal(p, t) {
+            const wobble = Math.sin(t * p.spin) * p.r * 0.2;
+            const sizeX = p.r;
+            const sizeY = p.r * 0.6;
+            ctx.save();
+            ctx.translate(p.x + wobble, p.y);
+            ctx.rotate(p.tilt + Math.sin(t * p.spin * 1.5) * 0.6);
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, sizeX);
+            gradient.addColorStop(0, 'hsla(' + p.hue + ', ' + p.sat + '%, 96%, 0.9)');
+            gradient.addColorStop(0.6, 'hsla(' + p.hue + ', ' + p.sat + '%, 90%, 0.85)');
+            gradient.addColorStop(1, 'hsla(' + p.hue + ', ' + p.sat + '%, 82%, 0.65)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(sizeX * 0.3, -sizeY, sizeX, -sizeY * 0.2, sizeX * 0.8, sizeY * 0.8);
+            ctx.bezierCurveTo(sizeX * 0.4, sizeY * 0.5, sizeX * 0.2, sizeY, 0, sizeY * 0.6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        let lastTime = 0;
+        function tick(ts) {
+            const dt = Math.min(30, ts - lastTime);
+            lastTime = ts;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const time = ts * 0.001;
+            for (let i = 0; i < petals.length; i++) {
+                const p = petals[i];
+                p.x += p.drift + Math.sin(time + i) * 0.1;
+                p.y += p.vy * (dt * 0.06) + 0.4;
+                p.tilt += 0.0015 * dt;
+
+                drawPetal(p, ts);
+
+                if (p.y > canvas.height + 30 || p.x < -40 || p.x > canvas.width + 40) {
+                    petals.splice(i, 1);
+                    spawnPetal();
+                }
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        requestAnimationFrame(tick);
+    })();
 </script>
 `;
 
