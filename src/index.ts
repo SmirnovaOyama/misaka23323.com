@@ -382,7 +382,7 @@ function renderHomePage() {
     const content = `
 <div class="hero" style="margin-top: -0.75rem;">
     <div class="hero-content">
-        <h1>Hello, I'm<br>Mahiro Oyama</h1>
+        <h1>Hello, I'm<br>Smirnova Oyama</h1>
         <p>An undergraduate student from China.</p>
     </div>
     
@@ -402,7 +402,7 @@ function renderHomePage() {
     <a href="https://icp.gov.moe/?keyword=20255514" target="_blank">萌ICP备20255514号</a>
 </div>
 `;
-    return render("Mahiro Oyama", content);
+    return render("Smirnova Oyama", content);
 }
 
 function renderProjectsPage() {
