@@ -222,7 +222,10 @@ const navBar = `
     </div>
 </div>
 <nav class="navbar">
-    <a href="/" class="logo">Mahiro Oyama</a>
+    <a href="/" class="logo">
+        <img src="/favicon.ico" alt="Site icon" class="logo-icon" width="28" height="28" style="border-radius: 8px; object-fit: cover;">
+        <span>Smirnova Oyama</span>
+    </a>
     <div class="menu-toggle">☰</div>
     <ul class="nav-links">
         <li class="nav-item"><a href="/">Home</a></li>

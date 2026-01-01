@@ -39,10 +39,21 @@ body {
 }
 
 .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     font-weight: 700;
     font-size: 1.2rem;
     text-decoration: none;
     color: var(--text-color);
+}
+
+.logo-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    object-fit: cover;
+    display: block;
 }
 
 .nav-links {
