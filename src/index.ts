@@ -1129,7 +1129,7 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
 (function() {
     const HL_CORE = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js';
     const HL_LANGS = [
-        'cpp','javascript','typescript','python','bash','json','java','c','go','rust','html','css','xml','yaml'
+        'cpp','javascript','typescript','python','bash','json','java','c','go','rust','xml','yaml'
     ];
 
     function loadScript(src) {
@@ -1275,28 +1275,178 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
     const metaTagsWithHighlight = [metaTags, highlightAssets].join('\n    ');
 
     const content = `
-<article class="article-content" itemscope itemtype="https://schema.org/Article" data-iv-entry="article">
-    <meta itemprop="mainEntityOfPage" content="${canonicalUrl}">
-    <meta itemprop="url" content="${canonicalUrl}">
-    <header class="article-header">
-        <h1 itemprop="headline">${article.title}${collectionHtml}</h1>
-        <div class="article-meta">
-            <time datetime="${isoPublished}" itemprop="datePublished">${article.date}</time>
-            <meta itemprop="dateModified" content="${isoModified}">
-            <span class="article-author" itemprop="author" itemscope itemtype="https://schema.org/Person">
-                <meta itemprop="name" content="Smirnova Oyama">
-                Smirnova Oyama
-            </span>
+<div class="article-shell">
+    <aside class="toc-drawer" aria-label="Table of contents">
+        <div class="toc-header">
+            <span>Contents</span>
         </div>
-    </header>
-    <div class="content" itemprop="articleBody">
-        ${htmlContent}
+        <nav class="toc-list" id="tocList" aria-label="文章目录"></nav>
+    </aside>
+    <div class="toc-overlay" id="tocOverlay"></div>
+    <button class="toc-toggle" id="tocToggle" type="button" aria-label="Toggle table of contents">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4" y="6" width="16" height="2" rx="1" fill="currentColor" />
+            <rect x="4" y="11" width="16" height="2" rx="1" fill="currentColor" />
+            <rect x="4" y="16" width="16" height="2" rx="1" fill="currentColor" />
+        </svg>
+    </button>
+    <div class="article-main">
+        <article class="article-content" itemscope itemtype="https://schema.org/Article" data-iv-entry="article">
+            <meta itemprop="mainEntityOfPage" content="${canonicalUrl}">
+            <meta itemprop="url" content="${canonicalUrl}">
+            <header class="article-header">
+                <h1 itemprop="headline">${article.title}${collectionHtml}</h1>
+                <div class="article-meta">
+                    <time datetime="${isoPublished}" itemprop="datePublished">${article.date}</time>
+                    <meta itemprop="dateModified" content="${isoModified}">
+                    <span class="article-author" itemprop="author" itemscope itemtype="https://schema.org/Person">
+                        <meta itemprop="name" content="Smirnova Oyama">
+                        Smirnova Oyama
+                    </span>
+                </div>
+            </header>
+            <div class="content" itemprop="articleBody">
+                ${htmlContent}
+            </div>
+        </article>
     </div>
-</article>
+</div>
 <script>
     (function() {
+        let tocObserver = null;
+        const tocDrawer = document.querySelector('.toc-drawer');
+        const tocList = document.getElementById('tocList');
+        const tocToggle = document.getElementById('tocToggle');
+        const tocOverlay = document.getElementById('tocOverlay');
         const navItem = document.getElementById('navRefreshItem');
         const navBtn = document.getElementById('navRefreshBtn');
+
+        const buildSlug = (text) => {
+            return (text || '')
+                .toLowerCase()
+                .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        };
+
+        const openToc = () => document.body.classList.add('toc-open');
+        const closeToc = () => document.body.classList.remove('toc-open');
+        const toggleToc = () => {
+            const isOpen = document.body.classList.toggle('toc-open');
+            if (isOpen && tocList) {
+                const active = tocList.querySelector('.toc-link.active');
+                if (active && active.scrollIntoView) {
+                    active.scrollIntoView({ block: 'nearest' });
+                }
+            }
+        };
+
+        const syncBreakpoint = () => {
+            if (window.innerWidth >= 1100) {
+                closeToc();
+            }
+        };
+
+        let tocLinks = [];
+        let allowObserver = true;
+        let hasUserScrolled = false;
+
+        window.addEventListener('scroll', () => {
+            hasUserScrolled = true;
+        }, { passive: true, once: true });
+
+        const scrollActiveLinkIntoView = () => {
+            if (!tocList) return;
+            const active = tocList.querySelector('.toc-link.active');
+            if (active && active.scrollIntoView) {
+                active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
+        };
+
+        const activate = (id) => {
+            if (!id || !tocLinks.length) return;
+            tocLinks.forEach(link => {
+                const target = link.getAttribute('href') || '';
+                link.classList.toggle('active', target === '#' + id);
+            });
+            scrollActiveLinkIntoView();
+        };
+
+        const setupToc = () => {
+            if (!tocList) return;
+            tocList.innerHTML = '';
+            if (tocObserver) {
+                tocObserver.disconnect();
+                tocObserver = null;
+            }
+            const articleBody = document.querySelector('.article-content .content');
+            if (!articleBody) return;
+
+            const headings = Array.from(articleBody.querySelectorAll('h1, h2, h3'));
+            if (!headings.length) {
+                if (tocDrawer) tocDrawer.classList.add('is-empty');
+                if (tocToggle) tocToggle.style.display = 'none';
+                return;
+            }
+
+            if (tocDrawer) tocDrawer.classList.remove('is-empty');
+            if (tocToggle) tocToggle.style.display = '';
+
+            headings.forEach(h => {
+                if (!h.id) h.id = buildSlug(h.textContent || '');
+                const link = document.createElement('a');
+                link.className = 'toc-link level-' + h.tagName.slice(1);
+                link.href = '#' + h.id;
+                link.textContent = h.textContent || '';
+                tocList.appendChild(link);
+            });
+
+            tocLinks = Array.from(tocList.querySelectorAll('.toc-link'));
+
+            tocObserver = new IntersectionObserver((entries) => {
+                if (!allowObserver) return;
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && hasUserScrolled) {
+                        activate(entry.target.id);
+                    }
+                });
+            }, { rootMargin: '-38% 0px -45% 0px', threshold: 0.1 });
+
+            headings.forEach(h => tocObserver && tocObserver.observe(h));
+        };
+
+        if (tocToggle) tocToggle.addEventListener('click', toggleToc);
+        if (tocOverlay) tocOverlay.addEventListener('click', closeToc);
+        window.addEventListener('keyup', (e) => { if (e.key === 'Escape') closeToc(); });
+        window.addEventListener('resize', syncBreakpoint);
+
+        if (tocList) {
+            tocList.addEventListener('click', (e) => {
+                const target = e.target instanceof Element ? e.target.closest('a') : null;
+                if (target && target.tagName === 'A') {
+                    e.preventDefault();
+                    const id = (target.getAttribute('href') || '').replace('#', '');
+                    if (id) {
+                        allowObserver = false;
+                        activate(id);
+                        const heading = document.getElementById(id);
+                        if (heading) {
+                            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                        window.history.pushState(null, '', '#' + id);
+                        setTimeout(() => { allowObserver = true; }, 800);
+                    }
+                    if (window.innerWidth <= 1099) {
+                        closeToc();
+                    }
+                }
+            });
+        }
+
+        window.addEventListener('hashchange', () => activate(window.location.hash.replace('#', '')));
+
+        syncBreakpoint();
+        setupToc();
+
         if (navItem && navBtn) {
             navItem.style.display = 'flex';
             
@@ -1315,6 +1465,7 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
                     const currentContent = document.querySelector('.article-content');
                     if (newContent && currentContent) {
                         currentContent.innerHTML = newContent.innerHTML;
+                        setupToc();
                         if (window.applyCodeHighlight) {
                             window.applyCodeHighlight();
                         }
