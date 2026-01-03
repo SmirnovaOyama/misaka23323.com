@@ -345,33 +345,25 @@ const scripts = `
         }
     });
 
-    // Sakura animation on homepage only
+    // Sakura animation on homepage only; cleaned up when leaving
     (function() {
-        const hero = document.querySelector('.hero');
-        if (!hero) return;
-
-        const canvas = document.createElement('canvas');
-        canvas.id = 'sakuraCanvas';
-        canvas.className = 'sakura-canvas';
-        canvas.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(canvas);
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const petals = [];
-        const maxPetals = Math.min(70, Math.max(40, Math.floor(window.innerWidth / 18)));
-
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        resize();
-        window.addEventListener('resize', resize);
+        let canvas = null;
+        let ctx = null;
+        let petals = [];
+        let maxPetals = 0;
+        let animationId = null;
+        let lastTime = 0;
 
         const rand = (min, max) => Math.random() * (max - min) + min;
 
+        const resize = () => {
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
         const spawnPetal = () => {
+            if (!canvas) return;
             petals.push({
                 x: rand(0, canvas.width),
                 y: rand(-canvas.height, 0),
@@ -385,9 +377,8 @@ const scripts = `
             });
         };
 
-        while (petals.length < maxPetals) spawnPetal();
-
-        function drawPetal(p, t) {
+        const drawPetal = (p, t) => {
+            if (!ctx) return;
             const wobble = Math.sin(t * p.spin) * p.r * 0.2;
             const sizeX = p.r;
             const sizeY = p.r * 0.6;
@@ -406,10 +397,22 @@ const scripts = `
             ctx.closePath();
             ctx.fill();
             ctx.restore();
-        }
+        };
 
-        let lastTime = 0;
-        function tick(ts) {
+        const stop = () => {
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = null;
+            petals = [];
+            if (canvas) {
+                window.removeEventListener('resize', resize);
+                canvas.remove();
+            }
+            canvas = null;
+            ctx = null;
+        };
+
+        const tick = (ts) => {
+            if (!canvas || !ctx) return;
             const dt = Math.min(30, ts - lastTime);
             lastTime = ts;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -429,10 +432,40 @@ const scripts = `
                 }
             }
 
-            requestAnimationFrame(tick);
-        }
+            animationId = requestAnimationFrame(tick);
+        };
 
-        requestAnimationFrame(tick);
+        const start = () => {
+            const hero = document.querySelector('.hero');
+            if (!hero) {
+                stop();
+                return;
+            }
+            if (canvas) return; // already running
+
+            canvas = document.createElement('canvas');
+            canvas.id = 'sakuraCanvas';
+            canvas.className = 'sakura-canvas';
+            canvas.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(canvas);
+
+            ctx = canvas.getContext('2d');
+            if (!ctx) {
+                stop();
+                return;
+            }
+
+            maxPetals = Math.min(70, Math.max(40, Math.floor(window.innerWidth / 18)));
+            petals = [];
+            resize();
+            window.addEventListener('resize', resize);
+            while (petals.length < maxPetals) spawnPetal();
+            lastTime = performance.now();
+            animationId = requestAnimationFrame(tick);
+        };
+
+        start();
+        window.addEventListener('spa:navigated', start);
     })();
 
     // SPA-style navigation (history + partial swap)
@@ -552,6 +585,10 @@ const scripts = `
             } else {
                 window.scrollTo({ top: 0, behavior: 'auto' });
             }
+
+            window.dispatchEvent(new CustomEvent('spa:navigated', {
+                detail: { url, path: (new URL(url, window.location.href)).pathname }
+            }));
 
             setProgress(100);
             setTimeout(() => setProgress(0), 250);
