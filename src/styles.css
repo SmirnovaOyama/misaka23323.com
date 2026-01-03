@@ -179,6 +179,12 @@ body.toc-open {
     min-height: 100vh;
 }
 
+.page-transitioning {
+    opacity: 0.45;
+    transition: opacity 160ms ease;
+    pointer-events: none;
+}
+
 .container:has(.article-shell) {
     max-width: 1300px;
     padding-left: 1rem;
@@ -1374,13 +1380,19 @@ body.toc-open {
 
 .icp-banner {
     width: 100%;
+    margin-top: 0.2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #6b7280;
 }
 
-@media (max-width: 768px) {
-    .icp-banner {
-        font-size: 0.95rem;
-        padding: 0.9rem 1rem;
-    }
+.icp-banner a {
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.icp-banner a:hover {
+    text-decoration: underline;
 }
 
 @media (max-width: 768px) {

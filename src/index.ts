@@ -279,16 +279,29 @@ const scripts = `
         });
     });
 
-    // Progress Bar
-    window.onscroll = function() {
-        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (winScroll / height) * 100;
-        const progressBar = document.getElementById("progressBar");
-        if (progressBar) {
-            progressBar.style.width = scrolled + "%";
-        }
-    };
+    // Progress Bar: show only on article pages (reading progress); nav SPA updates separately
+    (function(){
+        const progressBar = document.getElementById('progressBar');
+        if (!progressBar) return;
+
+        const isArticlePage = () => !!document.querySelector('.article-content');
+
+        const updateScrollProgress = () => {
+            if (!isArticlePage()) {
+                progressBar.style.width = '0%';
+                progressBar.style.opacity = '0';
+                return;
+            }
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+            progressBar.style.opacity = '1';
+            progressBar.style.width = scrolled + '%';
+        };
+
+        window.addEventListener('scroll', updateScrollProgress, { passive: true });
+        updateScrollProgress();
+    })();
 
     // External Link Modal
     const modal = document.getElementById('externalLinkModal');
@@ -421,6 +434,154 @@ const scripts = `
 
         requestAnimationFrame(tick);
     })();
+
+    // SPA-style navigation (history + partial swap)
+    (function() {
+        const containerSelector = 'main.container';
+        const bypassPrefixes = ['/2048', '/2dots', '/MikuBot', '/favicon', '/assets', '/public'];
+        let isNavigating = false;
+
+        const progressBar = document.getElementById('progressBar');
+        const setProgress = (v) => {
+            if (!progressBar) return;
+            progressBar.style.opacity = v > 0 ? '1' : '0';
+            progressBar.style.width = v + '%';
+        };
+
+        const closeOverlays = () => {
+            document.body.classList.remove('toc-open');
+            const navLinks = document.querySelector('.nav-links');
+            const overlay = document.querySelector('.overlay');
+            if (navLinks && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+            }
+            if (overlay && overlay.classList.contains('active')) {
+                overlay.classList.remove('active');
+            }
+            document.body.style.overflow = '';
+        };
+
+        const shouldBypass = (url) => {
+            const u = new URL(url, window.location.href);
+            if (u.origin !== window.location.origin) return true;
+            return bypassPrefixes.some(p => u.pathname.startsWith(p));
+        };
+
+        const runScripts = (scriptNodes) => {
+            scriptNodes.forEach(node => {
+                const s = document.createElement('script');
+                if (node.src) {
+                    s.src = node.src;
+                    s.async = false;
+                } else {
+                    s.textContent = node.textContent;
+                }
+                document.body.appendChild(s);
+                s.remove();
+            });
+        };
+
+        const swapMain = async (url, pushState) => {
+            if (isNavigating) return;
+            isNavigating = true;
+            setProgress(12);
+            const currentMain = document.querySelector(containerSelector);
+            if (!currentMain) {
+                window.location.href = url;
+                isNavigating = false;
+                return;
+            }
+
+            currentMain.classList.add('page-transitioning');
+
+            let response;
+            try {
+                response = await fetch(url, { headers: { 'X-Requested-With': 'spa' } });
+                setProgress(48);
+            } catch (_err) {
+                window.location.href = url;
+                isNavigating = false;
+                return;
+            }
+
+            if (!response || !response.ok) {
+                window.location.href = url;
+                isNavigating = false;
+                return;
+            }
+
+            const html = await response.text();
+            setProgress(72);
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const newMain = doc.querySelector(containerSelector);
+            if (!newMain) {
+                window.location.href = url;
+                isNavigating = false;
+                return;
+            }
+
+            const newScripts = Array.from(newMain.querySelectorAll('script'));
+            newScripts.forEach(s => s.remove());
+
+            currentMain.replaceWith(newMain);
+
+            // smooth in
+            newMain.style.opacity = '0';
+            newMain.style.transform = 'translateY(6px)';
+            newMain.style.transition = 'opacity 180ms ease, transform 180ms ease';
+            requestAnimationFrame(() => {
+                newMain.style.opacity = '1';
+                newMain.style.transform = 'translateY(0)';
+            });
+
+            currentMain.classList.remove('page-transitioning');
+
+            if (doc.title) document.title = doc.title;
+            if (pushState) history.pushState({ spa: true }, '', url);
+
+            runScripts(newScripts);
+
+            if (window.applyCodeHighlight) window.applyCodeHighlight();
+
+            closeOverlays();
+
+            const hash = (new URL(url, window.location.href)).hash;
+            if (hash) {
+                const target = document.getElementById(hash.slice(1));
+                if (target) target.scrollIntoView({ behavior: 'auto', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'auto' });
+            }
+
+            setProgress(100);
+            setTimeout(() => setProgress(0), 250);
+            isNavigating = false;
+        };
+
+        const onLinkClick = (e) => {
+            if (e.defaultPrevented) return;
+            if (e.button !== 0) return; // only left click
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#')) return;
+            const target = link.getAttribute('target');
+            if (target && target !== '_self') return;
+            const url = link.href;
+            if (shouldBypass(url)) return;
+            if (new URL(url).pathname === window.location.pathname && !link.hash) return;
+            e.preventDefault();
+            swapMain(url, true);
+        };
+
+        const onPopState = () => {
+            swapMain(window.location.href, false);
+        };
+
+        window.addEventListener('popstate', onPopState);
+        document.addEventListener('click', onLinkClick);
+    })();
 </script>
 `;
 
@@ -488,7 +649,7 @@ function renderHomePage() {
         </a>
     </div>
 </div>
-<div class="article-card icp-banner" style="margin-top: 0.2rem; text-align: center; font-size: 0.95rem; padding: 0.85rem 1rem;">
+<div class="icp-banner">
     <a href="https://icp.gov.moe/?keyword=20255514" target="_blank">萌ICP备20255514号</a>
 </div>
 `;
@@ -1449,34 +1610,36 @@ async function renderArticlePage(slug: string, url: string, telegramChannel?: st
 
         if (navItem && navBtn) {
             navItem.style.display = 'flex';
-            
-            navBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                navBtn.classList.add('btn-loading');
-                const minDelay = new Promise(resolve => setTimeout(resolve, 500));
-                
-                try {
-                    const response = await fetch(window.location.href);
-                    if (!response.ok) throw new Error('Network error');
-                    const html = await response.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const newContent = doc.querySelector('.article-content');
-                    const currentContent = document.querySelector('.article-content');
-                    if (newContent && currentContent) {
-                        currentContent.innerHTML = newContent.innerHTML;
-                        setupToc();
-                        if (window.applyCodeHighlight) {
-                            window.applyCodeHighlight();
+            if (!navBtn.dataset.boundRefresh) {
+                navBtn.dataset.boundRefresh = '1';
+                navBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    navBtn.classList.add('btn-loading');
+                    const minDelay = new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    try {
+                        const response = await fetch(window.location.href);
+                        if (!response.ok) throw new Error('Network error');
+                        const html = await response.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newContent = doc.querySelector('.article-content');
+                        const currentContent = document.querySelector('.article-content');
+                        if (newContent && currentContent) {
+                            currentContent.innerHTML = newContent.innerHTML;
+                            setupToc();
+                            if (window.applyCodeHighlight) {
+                                window.applyCodeHighlight();
+                            }
                         }
+                        await minDelay;
+                    } catch (err) {
+                        alert('Failed to refresh: ' + (err.message || err));
+                    } finally {
+                        navBtn.classList.remove('btn-loading');
                     }
-                    await minDelay;
-                } catch (err) {
-                    alert('Failed to refresh: ' + (err.message || err));
-                } finally {
-                    navBtn.classList.remove('btn-loading');
-                }
-            });
+                });
+            }
         }
     })();
 </script>
